@@ -1,0 +1,61 @@
+# Node.js
+node_modules/
+npm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Uploads (don't copy large files to Docker)
+uploads/originals/*.mp4
+uploads/originals/*.avi
+uploads/originals/*.mov
+uploads/audio/*.wav
+uploads/audio/*.mp3
+uploads/transcription/*
+uploads/translations/*
+uploads/translated_audio/*.wav
+uploads/translated_audio/*.mp3
+uploads/captions/*.vtt
+uploads/captions/*.srt
+uploads/transcripts/*
+uploads/processed/*.mp4
+uploads/final/*.mp4
+uploads/temp/*
+
+# Keep structure files
+!uploads/**/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

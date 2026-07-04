@@ -1,0 +1,111 @@
+# Python virtual environment
+venv/
+backend/venv/
+
+# Node modules
+node_modules/
+backend/node_modules/
+
+
+# ===== PYTHON =====
+venv/
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+*.egg-info/
+dist/
+build/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ===== NODE.JS =====
+node_modules/
+backend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+.eslintcache
+
+# ===== ENVIRONMENT VARIABLES =====
+.env
+.env.local
+.env.production
+.env.test
+*.env
+
+# ===== UPLOADS (Don't commit large files) =====
+# Original videos
+uploads/originals/*.mp4
+uploads/originals/*.avi
+uploads/originals/*.mov
+uploads/originals/*.mkv
+
+# Processed outputs
+uploads/processed/*.mp4
+uploads/final/*.mp4
+
+# Audio files
+uploads/audio/*.wav
+uploads/audio/*.mp3
+
+# Translation audio
+uploads/translated_audio/*.wav
+uploads/translated_audio/*.mp3
+
+# Temporary files
+uploads/temp/*
+uploads/transcription/*
+uploads/translations/*
+uploads/transcripts/*
+uploads/captions/*.vtt
+uploads/captions/*.srt
+
+# Keep directory structure
+!uploads/originals/.gitkeep
+!uploads/processed/.gitkeep
+!uploads/audio/.gitkeep
+!uploads/translated_audio/.gitkeep
+!uploads/captions/.gitkeep
+!uploads/transcripts/.gitkeep
+!uploads/transcription/.gitkeep
+!uploads/translations/.gitkeep
+!uploads/final/.gitkeep
+!uploads/temp/.gitkeep
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# ===== OS =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===== MONGODB =====
+data/
+*.db
+
+# ===== LOGS =====
+*.log
+logs/
+*.log.*
+
+
+
+backend/processing/
+backend/.env

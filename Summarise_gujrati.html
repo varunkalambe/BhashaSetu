@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apni Vani - AI સારાંશ સાધન</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: fadeInLeft 1s ease;
+        }
+
+        .logo:hover { transform: scale(1.05) rotate(2deg); }
+        
+        .logo-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-tagline { color: #666; font-size: 12px; }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
+            color: #4A90E2;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        /* Hero Section - Fixed spacing */
+        .hero {
+            text-align: center;
+            padding: 140px 0 40px;
+            margin-top: 0;
+        }
+
+        .made-in-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff9a56, #ffad56);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(255, 154, 86, 0.3);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 40px 0;
+        }
+
+        .input-selector {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .input-selector h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .selector-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .selector-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .selector-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .selector-btn.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            min-height: 500px;
+        }
+
+        .input-panel,
+        .output-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Audio Input Styles */
+        .audio-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .audio-option {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .audio-option:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .audio-option.active {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .option-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .option-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .option-desc {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        /* File Upload Styles */
+        .file-upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .file-upload-area:hover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .file-upload-area.drag-over {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        /* Recording Controls */
+        .recording-controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .record-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .record-btn:hover {
+            background: #d32f2f;
+            transform: scale(1.05);
+        }
+
+        .record-btn.recording {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .recording-status {
+            margin-top: 15px;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Output Panel Styles */
+        .summary-output {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .summary-placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .process-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .process-btn:disabled {
+            background: rgba(255, 255, 255, 0.2);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Video Styles */
+        .video-preview {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Progress Styles */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .section-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .hero {
+                padding: 120px 0 30px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav {
+                padding: 10px 0;
+            }
+
+            .nav-menu {
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px;
+                gap: 10px;
+            }
+
+            .nav-menu li a {
+                padding: 6px 12px;
+                font-size: 0.9rem;
+            }
+
+            .selector-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .selector-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .logo-text {
+                font-size: 22px;
+            }
+
+            .logo-tagline {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                padding: 110px 0 20px;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .nav-menu {
+                gap: 5px;
+            }
+
+            .nav-menu li a {
+                padding: 5px 8px;
+                font-size: 0.8rem;
+            }
+
+            .logo-img {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">
+                    <img src="Logo.png" alt="Apni Vani Logo" class="logo-img">
+                    <div>
+                        <div class="logo-text">APNI VANI</div>
+                        <span class="logo-tagline">અવરોધો તોડવી, અવાજોને જોડવા</span>
+                    </div>
+                </div>
+                <ul class="nav-menu">
+    <li><a href="index_Gujrati.html">હોમ</a></li>
+    <li><a href="Home.html">ભાષા</a></li>
+    <li><a href="Translation_gujrati.html">વિડિઓ</a></li>
+    <li><a href="Voice_gujrati.html">અવાજ</a></li>
+    <li><a href="Summarise_Gujrati.html" class="active">સારાંશ</a></li>
+    <li><a href="index_Gujrati.html">અમારા વિશે</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="made-in-badge">🎓 PCE માં બનાવેલ</div>
+            <h1>🎯 AI સારાંશ સાધન</h1>
+            <p>અમારી અદ્યતન AI ટેકનોલોજી વડે તમારા ઑડિઓ અને વિડિઓ સામગ્રીને સંક્ષિપ્ત, બુદ્ધિશાળી સારાંશમાં ફેરવો</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Input Type Selector -->
+            <div class="input-selector">
+                <h2>તમારા ઇનપુટ પ્રકાર પસંદ કરો</h2>
+                <div class="selector-buttons">
+                    <button class="selector-btn active" onclick="selectInputType('audio')">
+                        🎵 ઑડિઓ ઇનપુટ
+                    </button>
+                    <button class="selector-btn" onclick="selectInputType('video')">
+                        🎥 વિડિઓ ઇનપુટ
+                    </button>
+                </div>
+            </div>
+
+            <!-- Audio Input Section -->
+            <div class="content-section active" id="audio-section">
+                <div class="section-grid">
+                    <div class="input-panel">
+                        <h3 class="panel-title">🎧 ઓડિયો ઇનપુટ વિકલ્પો</h3>
+                        <div class="audio-options">
+                            <div class="audio-option" onclick="selectAudioOption('upload')">
+                                <span class="option-icon">📁</span>
+                                <div class="option-title">ઓડિયો ફાઇલ અપલોડ કરો</div>
+                                <div class="option-desc">તમારા ઉપકરણમાંથી ઓડિયો ફાઇલ પસંદ કરો</div>
+                            </div>
+                            <div class="audio-option" onclick="selectAudioOption('record')">
+                                <span class="option-icon">🎙️</span>
+                                <div class="option-title">ઓડિયો રેકોર્ડ કરો</div>
+                                <div class="option-desc">તમારા માઇક્રોફોનમાંથી સીધો ઓડિયો રેકોર્ડ કરો</div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload Area -->
+                        <div class="file-upload-area" id="audio-upload-area" style="display: none;">
+                            <div class="upload-icon">🎵</div>
+                            <div class="upload-text">
+                                <p><strong>તમારી ઑડિઓ ફાઇલ અપલોડ કરો</strong></p>
+                                <p>તમારી ઑડિઓ ફાઇલને અહીં ખેંચો અને છોડો, અથવા બ્રાઉઝ કરવા માટે ક્લિક કરો</p>
+                                <p style="font-size: 0.9rem; opacity: 0.8;">સપોર્ટેડ: MP3, WAV, M4A, OGG (મહત્તમ: 50MB)</p>
+                            </div>
+                            <button class="upload-btn" onclick="document.getElementById('audioFile').click()">ઑડિઓ ફાઇલ પસંદ કરો</button>
+                            <input type="file" id="audioFile" class="file-input" accept="audio/*">
+                        </div>
+
+                        <!-- Recording Controls -->
+                        <div class="recording-controls" id="recording-controls" style="display: none;">
+                            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙️ રેકોર્ડિંગ શરૂ કરો</button>
+                            <div class="recording-status" id="recordingStatus">રેકોર્ડિંગ શરૂ કરવા માટે ક્લિક કરો</div>
+                            <audio id="recordedAudio" controls style="width: 100%; margin-top: 15px; display: none;"></audio>
+                        </div>
+
+                        <div class="progress-bar" id="audioProgress" style="display: none;">
+                            <div class="progress-fill" id="audioProgressFill"></div>
+                        </div>
+
+                        <button class="process-btn" id="audioProcessBtn" onclick="processAudio()" disabled>
+                            🚀 સારાંશ બનાવો
+                        </button>
+                    </div>
+
+                    <div class="output-panel">
+                        <h3 class="panel-title">📄 ઓડિયો સારાંશ આઉટપુટ</h3>
+                        <div class="summary-output" id="audioSummary">
+                            <div class="summary-placeholder">
+                                તમારો AI-જનરેટેડ ઓડિયો સારાંશ અહીં દેખાશે...
+                                <br><br>
+                                શરૂ કરવા માટે ઓડિયો ફાઇલ અપલોડ કરો અથવા રેકોર્ડ કરો!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Input Section -->
+            <div class="content-section" id="video-section">
+                <div class="section-grid">
+                    <div class="input-panel">
+                        <h3 class="panel-title">🎬 વિડિઓ ઇનપુટ</h3>
+                        <div class="file-upload-area" id="video-upload-area">
+                            <div class="upload-icon">🎥</div>
+                            <div class="upload-text">
+                                <p><strong>તમારી વિડિઓ ફાઇલ અપલોડ કરો</strong></p>
+                                <p>તમારી વિડિઓ ફાઇલને અહીં ખેંચો અને છોડો, અથવા બ્રાઉઝ કરવા માટે ક્લિક કરો</p>
+                                <p style="font-size: 0.9rem; opacity: 0.8;">સપોર્ટેડ: MP4, AVI, MOV, WMV (મહત્તમ: 200MB)</p>
+                            </div>
+                            <button class="upload-btn" onclick="document.getElementById('videoFile').click()">વિડિઓ ફાઇલ પસંદ કરો</button>
+                            <input type="file" id="videoFile" class="file-input" accept="video/*">
+                        </div>
+
+                        <video class="video-preview" id="videoPreview" controls style="display: none;"></video>
+
+                        <div class="progress-bar" id="videoProgress" style="display: none;">
+                            <div class="progress-fill" id="videoProgressFill"></div>
+                        </div>
+
+                        <button class="process-btn" id="videoProcessBtn" onclick="processVideo()" disabled>
+                            🚀 સારાંશ બનાવો
+                        </button>
+                    </div>
+
+                    <div class="output-panel">
+                        <h3 class="panel-title">📄 વિડિઓ સારાંશ આઉટપુટ</h3>
+                        <div class="summary-output" id="videoSummary">
+                            <div class="summary-placeholder">
+                                તમારો AI-જનરેટેડ વિડિઓ સારાંશ અહીં દેખાશે...
+                                <br><br>
+                                શરૂ કરવા માટે વિડિઓ ફાઇલ અપલોડ કરો!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+
+        // Input type selection
+        function selectInputType(type) {
+            document.querySelectorAll('.selector-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(type + '-section').classList.add('active');
+        }
+
+        // Audio option selection
+        function selectAudioOption(option) {
+            document.querySelectorAll('.audio-option').forEach(opt => opt.classList.remove('active'));
+            event.target.closest('.audio-option').classList.add('active');
+            
+            const uploadArea = document.getElementById('audio-upload-area');
+            const recordingControls = document.getElementById('recording-controls');
+            
+            if (option === 'upload') {
+                uploadArea.style.display = 'block';
+                recordingControls.style.display = 'none';
+            } else {
+                uploadArea.style.display = 'none';
+                recordingControls.style.display = 'block';
+            }
+        }
+
+        // File upload handlers
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            handleAudioFile(e.target.files[0]);
+        });
+
+        document.getElementById('videoFile').addEventListener('change', function(e) {
+            handleVideoFile(e.target.files[0]);
+        });
+
+        function handleAudioFile(file) {
+            if (file) {
+                document.getElementById('audioProcessBtn').disabled = false;
+                showNotification(`ઓડિયો ફાઇલ "${file.name}" સફળતાપૂર્વક લોડ થઈ!`);
+            }
+        }
+
+        function handleVideoFile(file) {
+            if (file) {
+                const video = document.getElementById('videoPreview');
+                video.src = URL.createObjectURL(file);
+                video.style.display = 'block';
+                document.getElementById('videoProcessBtn').disabled = false;
+                showNotification(`વિડિઓ ફાઇલ "${file.name}" સફળતાપૂર્વક લોડ થઈ!`);
+            }
+        }
+
+        // Recording functionality
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const status = document.getElementById('recordingStatus');
+            
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    recordedChunks = [];
+                    
+                    mediaRecorder.ondataavailable = function(e) {
+                        if (e.data.size > 0) {
+                            recordedChunks.push(e.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = function() {
+                        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(blob);
+                        const recordedAudio = document.getElementById('recordedAudio');
+                        recordedAudio.src = audioUrl;
+                        recordedAudio.style.display = 'block';
+                        document.getElementById('audioProcessBtn').disabled = false;
+                    };
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.textContent = '⏹️ રેકોર્ડિંગ બંધ કરો';
+                    recordBtn.classList.add('recording');
+                    status.textContent = 'રેકોર્ડિંગ ચાલુ છે...';
+                    
+                } catch (err) {
+                    showNotification('માઇક્રોફોન ઍક્સેસ કરવામાં ભૂલ. કૃપા કરીને પરવાનગીઓ તપાસો.');
+                }
+            } else {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                recordBtn.textContent = '🎙️ રેકોર્ડિંગ શરૂ કરો';
+                recordBtn.classList.remove('recording');
+                status.textContent = 'રેકોર્ડિંગ પૂર્ણ થયું!';
+            }
+        }
+
+        // Processing functions
+        async function processAudio() {
+            const progressBar = document.getElementById('audioProgress');
+            const progressFill = document.getElementById('audioProgressFill');
+            const summaryDiv = document.getElementById('audioSummary');
+            
+            progressBar.style.display = 'block';
+            summaryDiv.innerHTML = 'ઓડિયો પ્રોસેસિંગ ચાલી રહ્યું છે... કૃપા કરીને રાહ જુઓ.';
+            
+            // Simulate processing
+            for (let i = 0; i <= 100; i += 10) {
+                progressFill.style.width = i + '%';
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            // Simulate AI summary
+            const mockSummary = `ઓડિયો સારાંશ ${new Date().toLocaleTimeString()} દ્વારા જનરેટ થયેલ:
+
+મુખ્ય મુદ્દાઓ:
+• મુખ્ય વિષય: [ઓડિયો સામગ્રીનું વિશ્લેષણ]
+• સમયગાળો: આશરે 2 મિનિટ 30 સેકન્ડ
+• વક્તા નંબર: 1 પ્રાથમિક વક્તા ઓળખાયો
+• ભાષા: ગુજરાતી (ઓળખાયેલ)
+
+સારાંશ:
+ઓડિયો સામગ્રીમાં ટેકનોલોજી અને નવીનતા વિશે મહત્વપૂર્ણ ચર્ચાઓ શામેલ છે. વક્તા ડિજિટલ પરિવર્તનની જરૂરિયાત પર ભાર મૂકે છે અને અમલીકરણ માટે ઘણી મુખ્ય વ્યૂહરચનાઓનો ઉલ્લેખ કરે છે.
+
+મુખ્ય શબ્દો: ટેકનોલોજી, નવીનતા, ડિજિટલ પરિવર્તન, વ્યૂહરચના
+
+ભાવના વિશ્લેષણ: હકારાત્મક (85% વિશ્વસનીયતા)
+સ્પષ્ટતા સ્કોર: 92/100
+
+અપની વાણી AI સારાંશ સાધન દ્વારા જનરેટ થયેલ`;
+            
+            summaryDiv.textContent = mockSummary;
+            progressBar.style.display = 'none';
+            showNotification('ઓડિયો સારાંશ સફળતાપૂર્વક જનરેટ થયો!');
+        }
+
+        async function processVideo() {
+            const progressBar = document.getElementById('videoProgress');
+            const progressFill = document.getElementById('videoProgressFill');
+            const summaryDiv = document.getElementById('videoSummary');
+            
+            progressBar.style.display = 'block';
+            summaryDiv.innerHTML = 'વિડિઓ પ્રોસેસિંગ ચાલી રહ્યું છે... કૃપા કરીને રાહ જુઓ.';
+            
+            // Simulate processing
+            for (let i = 0; i <= 100; i += 8) {
+                progressFill.style.width = i + '%';
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            // Simulate AI summary
+            const mockSummary = `વિડિઓ સારાંશ ${new Date().toLocaleTimeString()} સાથે જનરેટ થયેલ:
+
+વિડિઓ વિશ્લેષણ:
+• સમયગાળો: 5 મિનિટ 42 સેકન્ડ
+• રિઝોલ્યુશન: 1920x1080 (પૂર્ણ HD)
+• ફ્રેમ દર: 30 fps
+• ઑડિઓ ટ્રેક: 1 (ગુજરાતી)
+
+સામગ્રી સારાંશ:
+વિડિઓ કૃત્રિમ બુદ્ધિ અને મશીન લર્નિંગ એપ્લિકેશનોનું શૈક્ષણિક ઝાંખી રજૂ કરે છે. પ્રસ્તુતકર્તા વિવિધ AI સાધનોનું નિદર્શન કરે છે અને આધુનિક વ્યવસાયિક વાતાવરણમાં તેમના વ્યવહારુ અમલીકરણો સમજાવે છે.
+
+મુખ્ય દ્રશ્યો:
+1. પરિચય (0:00-0:30): AI ખ્યાલોનો ઝાંખી
+2. પ્રદર્શન (0:30-3:20): લાઇવ ટૂલ શોકેસ
+3. ઉપયોગના કિસ્સાઓ (3:20-4:50): વાસ્તવિક દુનિયાના એપ્લિકેશનો
+4. નિષ્કર્ષ (4:50-5:42): સારાંશ અને આગળના પગલાં
+
+દ્રશ્ય તત્વો:
+• ચાર્ટ અને ગ્રાફ: 8 ઉદાહરણો
+• કોડ પ્રદર્શન: 3 વિભાગો
+• સ્ક્રીન રેકોર્ડિંગ્સ: સમગ્ર વિડિઓમાં બહુવિધ
+
+ઑડિઓ ગુણવત્તા: ઉત્તમ (96/100)
+વિડિઓ ગુણવત્તા: ઉચ્ચ (94/100)
+સામગ્રી જોડાણ: ખૂબ જ ઉચ્ચ
+
+અપની વાણી AI સારાંશ સાધન દ્વારા જનરેટ કરેલ`;
+            
+            summaryDiv.textContent = mockSummary;
+            progressBar.style.display = 'none';
+            showNotification('વિડિઓ સારાંશ સફળતાપૂર્વક જનરેટ થયો!');
+        }
+
+        // Notification function
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 1001;
+                font-weight: 600;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Drag and drop functionality
+        const uploadAreas = document.querySelectorAll('.file-upload-area');
+        uploadAreas.forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('drag-over');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('drag-over');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    if (area.id === 'audio-upload-area') {
+                        handleAudioFile(files[0]);
+                    } else if (area.id === 'video-upload-area') {
+                        handleVideoFile(files[0]);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

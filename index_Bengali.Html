@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>অপনি ভাণী সম্পর্কে - বাধা ভাঙা, কণ্ঠস্বর সংযুক্ত করা</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================== Global Styles ================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ================== Welcome Overlay Styles - Dark Theme with Animations ================== */
+        #welcomeOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            transition: opacity 1s ease, visibility 1s ease;
+            overflow: hidden;
+        }
+
+        /* Animated background particles */
+        #welcomeOverlay::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 107, 157, 0.1) 0%, transparent 50%);
+            animation: floatingBg 20s ease-in-out infinite;
+        }
+
+        #welcomeOverlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .welcome-content {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            padding: 0 30px;
+            max-width: 95%;
+        }
+
+        .welcome-title {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        /* Text reveal animation */
+        .welcome-title-text {
+            display: inline-block;
+            opacity: 0;
+            animation: revealText 1.5s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+        }
+
+        .welcome-title-text span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(100px) rotate(10deg);
+            animation: slideUp 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+        }
+
+        /* Stagger each letter/character */
+        .welcome-title-text span:nth-child(1) { animation-delay: 0.1s; }
+        .welcome-title-text span:nth-child(2) { animation-delay: 0.15s; }
+        .welcome-title-text span:nth-child(3) { animation-delay: 0.2s; }
+        .welcome-title-text span:nth-child(4) { animation-delay: 0.25s; }
+        .welcome-title-text span:nth-child(5) { animation-delay: 0.3s; }
+        .welcome-title-text span:nth-child(6) { animation-delay: 0.35s; }
+        .welcome-title-text span:nth-child(7) { animation-delay: 0.4s; }
+        .welcome-title-text span:nth-child(8) { animation-delay: 0.45s; }
+        .welcome-title-text span:nth-child(9) { animation-delay: 0.5s; }
+        .welcome-title-text span:nth-child(10) { animation-delay: 0.55s; }
+        .welcome-title-text span:nth-child(11) { animation-delay: 0.6s; }
+        .welcome-title-text span:nth-child(12) { animation-delay: 0.65s; }
+        .welcome-title-text span:nth-child(13) { animation-delay: 0.7s; }
+        .welcome-title-text span:nth-child(14) { animation-delay: 0.75s; }
+        .welcome-title-text span:nth-child(15) { animation-delay: 0.8s; }
+        .welcome-title-text span:nth-child(16) { animation-delay: 0.85s; }
+        .welcome-title-text span:nth-child(17) { animation-delay: 0.9s; }
+        .welcome-title-text span:nth-child(18) { animation-delay: 0.95s; }
+        .welcome-title-text span:nth-child(19) { animation-delay: 1.0s; }
+        .welcome-title-text span:nth-child(20) { animation-delay: 1.05s; }
+
+        /* Glowing underline effect */
+        .welcome-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #ff6b9d);
+            animation: expandLine 1.5s ease-out 0.8s forwards;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.7);
+        }
+
+        .welcome-tagline {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            font-size: 19px;
+            color: rgba(255, 255, 255, 0.88);
+            margin-top: 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease-out 1.2s forwards;
+            letter-spacing: 0.5px;
+            line-height: 1.5;
+        }
+
+        /* Pulsing dots animation */
+        .loading-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 45px;
+        }
+
+        .dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            animation: pulseDot 1.4s ease-in-out infinite;
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.6);
+        }
+
+        .dot:nth-child(1) { animation-delay: 0s; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        /* Animated border effect */
+        .welcome-border {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 88%;
+            max-width: 850px;
+            height: 320px;
+            border: 2px solid transparent;
+            border-radius: 18px;
+            background: linear-gradient(#1a1a1a, #1a1a1a) padding-box,
+                        linear-gradient(45deg, #667eea, #764ba2, #ff6b9d, #667eea) border-box;
+            animation: rotateBorder 3s linear infinite;
+            opacity: 0.3;
+        }
+
+        /* Keyframe Animations for Welcome Overlay */
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        @keyframes revealText {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes expandLine {
+            to {
+                width: 75%;
+            }
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulseDot {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes floatingBg {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        @keyframes rotateBorder {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        body {
+            font-family: 'Noto Sans Bengali', 'Inter', 'Arial', sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ================== Header ================== */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover { transform: scale(1.05) rotate(2deg); }
+        .logo-svg { width: 60px; height: 60px; border-radius: 8px; }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-tagline { color: #666; font-size: 12px; }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
+            color: #4A90E2;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        /* ================== Hero Section ================== */
+        .hero {
+            padding: 140px 0 80px;
+            text-align: center;
+            color: white;
+            margin-top: 80px;
+        }
+
+        .made-in-PCE {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff9933, #138808);
+            padding: 10px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 35px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hero h1 { 
+            font-size: 3.8rem; 
+            margin-bottom: 1.5rem; 
+            font-weight: 700;
+            animation: fadeInUpHero 1s ease-out;
+        }
+
+        .hero p { 
+            font-size: 1.3rem; 
+            max-width: 800px; 
+            margin: 0 auto 2rem; 
+            opacity: 0.95;
+            animation: fadeInUpHero 1.2s ease-out;
+        }
+
+        @keyframes fadeInUpHero {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ================== Content Sections ================== */
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            margin: 40px 20px;
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            border-radius: 2px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+            line-height: 1.8;
+        }
+
+        .section-content {
+            max-width: 900px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            color: #555;
+            line-height: 1.9;
+            text-align: justify;
+        }
+
+        .section-content p {
+            margin-bottom: 20px;
+        }
+
+        /* ================== Vision & Mission Grid ================== */
+        .vision-mission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .vm-card {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+        }
+
+        .vm-card:hover {
+            transform: translateY(-10px);
+            border-color: #4A90E2;
+            box-shadow: 0 20px 50px rgba(74, 144, 226, 0.3);
+        }
+
+        .vm-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .vm-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .vm-description {
+            font-size: 1.05rem;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* ================== Features Grid ================== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #4A90E2;
+            box-shadow: 0 20px 50px rgba(74, 144, 226, 0.25);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .feature-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        /* ================== Stats Section ================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+            padding: 40px 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(74, 144, 226, 0.4);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        /* ================== Benefits List ================== */
+        .benefits-list {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .benefit-item {
+            background: white;
+            padding: 25px 30px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #4A90E2;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .benefit-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 30px rgba(74, 144, 226, 0.2);
+        }
+
+        .benefit-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .benefit-description {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* ================== Impact Section ================== */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .impact-card {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%);
+            padding: 30px 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .impact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(74, 144, 226, 0.2);
+        }
+
+        .impact-emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .impact-text {
+            font-size: 1.05rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        /* ================== CTA Section ================== */
+        .cta-section {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            border-radius: 20px;
+            margin: 40px 20px;
+            box-shadow: 0 20px 60px rgba(74, 144, 226, 0.4);
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cta-btn-primary {
+            background: white;
+            color: #4A90E2;
+        }
+
+        .cta-btn-primary:hover {
+            background: #f8f9ff;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .cta-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* ================== Footer ================== */
+        .footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 50px 0;
+            margin-top: 80px;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.8rem;
+            margin: 0 15px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            color: #4A90E2;
+            transform: translateY(-3px);
+        }
+
+        .footer p {
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+
+        /* ================== Responsive Design ================== */
+        @media (max-width: 1024px) {
+            .welcome-title {
+                font-size: 38px;
+                letter-spacing: 0.3px;
+            }
+            .welcome-tagline {
+                font-size: 17px;
+            }
+            .welcome-border {
+                height: 290px;
+                max-width: 800px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .hero p { font-size: 1.1rem; }
+            .section-title { font-size: 2rem; }
+            .content-section { padding: 40px 25px; }
+            .nav-menu { gap: 15px; }
+            .vision-mission-grid { grid-template-columns: 1fr; }
+            .cta-title { font-size: 2rem; }
+            
+            /* Welcome Overlay Responsive */
+            .welcome-content {
+                padding: 0 20px;
+            }
+            .welcome-title {
+                font-size: 32px;
+                letter-spacing: 0.2px;
+                line-height: 1.4;
+            }
+            .welcome-tagline {
+                font-size: 15px;
+                margin-top: 32px;
+            }
+            .welcome-border {
+                width: 90%;
+                height: 260px;
+            }
+            .loading-dots {
+                margin-top: 35px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav { flex-direction: column; gap: 20px; }
+            .hero h1 { font-size: 2rem; }
+            .section-title { font-size: 1.8rem; }
+            .stat-number { font-size: 2.5rem; }
+            
+            /* Welcome Overlay Mobile */
+            .welcome-content {
+                padding: 0 15px;
+            }
+            .welcome-title {
+                font-size: 24px;
+                letter-spacing: 0px;
+                margin-bottom: 15px;
+                line-height: 1.5;
+            }
+            .welcome-tagline {
+                font-size: 13px;
+                margin-top: 28px;
+            }
+            .welcome-border {
+                height: 230px;
+            }
+            .dot {
+                width: 9px;
+                height: 9px;
+            }
+            .loading-dots {
+                gap: 8px;
+                margin-top: 30px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .welcome-title {
+                font-size: 21px;
+            }
+            .welcome-tagline {
+                font-size: 12px;
+            }
+            .welcome-border {
+                height: 210px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Welcome Overlay - Bengali Version -->
+<div id="welcomeOverlay">
+    <div class="welcome-border"></div>
+    <div class="welcome-content">
+        <h1 class="welcome-title">
+            <span class="welcome-title-text">
+                <span>অ</span><span>প</span><span>ন</span><span>ি</span>
+                <span> </span>
+                <span>ভ</span><span>া</span><span>ণ</span><span>ী</span><span>ত</span><span>ে</span>
+                <span> </span>
+                <span>স</span><span>্</span><span>ব</span><span>া</span><span>গ</span><span>ত</span><span>ম</span>
+            </span>
+        </h1>
+        <p class="welcome-tagline">বাধা ভাঙা, কণ্ঠস্বর সংযুক্ত করা</p>
+        <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+    <div class="container">
+        <nav class="nav">
+            <div class="logo">
+                <img src="Logo.png" alt="অপনি ভাণী লোগো" class="logo-svg">
+                <div>
+                    <div class="logo-text">অপনি ভাণী</div>
+                    <span class="logo-tagline">বাধা ভাঙা, কণ্ঠস্বর সংযুক্ত করা</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index_Bengali.Html">হোম</a></li>
+                <li><a href="Home.html">ভাষা</a></li>
+                <li><a href="Translation_bengali.html">ভিডিও</a></li>
+                <li><a href="Voice_bengali.html">কণ্ঠস্বর</a></li>
+                <li><a href="Summarise_bengali.html">সারসংক্ষেপ</a></li>
+                <li><a href="index_Bengali.Html" class="active">আমাদের সম্পর্কে</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="made-in-PCE">🇮🇳 পিসিই-তে তৈরি</div>
+        <h1>অপনি ভাণী সম্পর্কে</h1>
+        <p>অত্যাধুনিক এআই অনুবাদ প্রযুক্তির মাধ্যমে ভারতের ভাষাগত বৈচিত্র্যকে ক্ষমতায়ন করা</p>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🌍 অপনি ভাণী কী?</h2>
+        <div class="section-content">
+            <p>
+                <strong>অপনি ভাণী</strong> একটি উদ্ভাবনী এআই-চালিত অনুবাদ প্ল্যাটফর্ম যা ভারতের অবিশ্বাস্যভাবে বৈচিত্র্যময় ভাষাগত পরিদৃশ্যের মধ্যে ভাষার বাধা দূর করার জন্য ডিজাইন করা হয়েছে। ২২টিরও বেশি আনুষ্ঠানিকভাবে স্বীকৃত ভাষা এবং শত শত আঞ্চলিক উপভাষা সহ, ভারত অনন্য যোগাযোগ চ্যালেঞ্জের মুখোমুখি হয় যা ঐতিহ্যবাহী অনুবাদ পদ্ধতিগুলি কার্যকরভাবে সমাধান করতে লড়াই করে।
+            </p>
+            <p>
+                আমাদের প্ল্যাটফর্ম নির্বিঘ্ন, নির্ভুল এবং সাংস্কৃতিকভাবে সংবেদনশীল অনুবাদ পরিষেবা প্রদান করতে অত্যাধুনিক কৃত্রিম বুদ্ধিমত্তা এবং মেশিন লার্নিং প্রযুক্তির সুবিধা নেয়। আপনি নথি, ভিডিও, ভয়েস রেকর্ডিং বা সরাসরি কথোপকথনের অনুবাদ করছেন না কেন, অপনি ভাণী নিশ্চিত করে যে ভাষা কখনই মানুষ এবং সুযোগের মধ্যে বাধা হয়ে দাঁড়ায় না।
+            </p>
+            <p>
+                একটি অন্তর্ভুক্তিমূলক ডিজিটাল ভারত তৈরি করার দৃষ্টিভঙ্গি থেকে জন্ম নেওয়া, অপনি ভাণী একটি অনুবাদ সরঞ্জামের চেয়ে বেশি প্রতিনিধিত্ব করে - এটি ভাষাগত সমতা, সাংস্কৃতিক সংরক্ষণ এবং তথ্যের সর্বজনীন প্রবেশাধিকারের দিকে একটি আন্দোলন। আমরা বিশ্বাস করি যে প্রতিটি কণ্ঠস্বর শোনা, বোঝা এবং মূল্যবান হওয়ার যোগ্য, এটি যে ভাষাতেই বলা হোক না কেন।
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Vision & Mission -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">✨ আমাদের দৃষ্টিভঙ্গি এবং মিশন</h2>
+        <div class="vision-mission-grid">
+            <div class="vm-card">
+                <div class="vm-icon">🎯</div>
+                <h3 class="vm-title">আমাদের দৃষ্টিভঙ্গি</h3>
+                <p class="vm-description">
+                    একটি ভাষাগতভাবে অন্তর্ভুক্তিমূলক ভারত তৈরি করা যেখানে প্রতিটি নাগরিক তাদের মাতৃভাষায় তথ্য, পরিষেবা এবং সুযোগ অ্যাক্সেস করতে পারে। আমরা এমন একটি ভবিষ্যতের কল্পনা করি যেখানে ভাষার বাধা আর ব্যক্তিগত বৃদ্ধি, ব্যবসায়িক সম্প্রসারণ বা সামাজিক সংযোগকে সীমাবদ্ধ করে না, সারা দেশে বৈচিত্র্যের মধ্যে প্রকৃত ঐক্য সক্ষম করে।
+                </p>
+            </div>
+            <div class="vm-card">
+                <div class="vm-icon">🚀</div>
+                <h3 class="vm-title">আমাদের মিশন</h3>
+                <p class="vm-description">
+                    অত্যাধুনিক এআই অনুবাদ সমাধান বিকাশ এবং সরবরাহ করা যা অ্যাক্সেসযোগ্য, নির্ভুল এবং সাংস্কৃতিকভাবে সচেতন। আমরা সমস্ত ভারতীয় ভাষা সমর্থন করতে, ভাষাগত ঐতিহ্য সংরক্ষণ করতে এবং ব্যক্তি ও ব্যবসাগুলিকে প্রতিটি ভাষার সমৃদ্ধি এবং সূক্ষ্মতা বজায় রেখে ভাষা সীমানা জুড়ে কার্যকরভাবে যোগাযোগ করতে ক্ষমতায়ন করতে প্রতিশ্রুতিবদ্ধ।
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why APNI VAANI -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">💡 কেন অপনি ভাণী বেছে নেবেন?</h2>
+        <p class="section-subtitle">যে বৈশিষ্ট্যগুলি আমাদের ভারতের পছন্দের অনুবাদ প্ল্যাটফর্ম করে তোলে তা আবিষ্কার করুন</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">এআই-চালিত নির্ভুলতা</h3>
+                <p class="feature-description">উন্নত মেশিন লার্নিং ব্যতিক্রমী নির্ভুলতার সাথে অর্থ, প্রসঙ্গ এবং সাংস্কৃতিক সূক্ষ্মতা ক্যাপচার করে এমন অনুবাদ নিশ্চিত করে।</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">বিদ্যুৎগতি দ্রুত</h3>
+                <p class="feature-description">সেকেন্ডে হাজার হাজার শব্দ প্রক্রিয়া করুন। সরাসরি কথোপকথন এবং তাত্ক্ষণিক নথি রূপান্তরের জন্য রিয়েল-টাইম অনুবাদ।</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3 class="feature-title">বহু-ভাষা সমর্থন</h3>
+                <p class="feature-description">হিন্দি, ইংরেজি, বাংলা, তামিল, তেলুগু, মারাঠি, গুজরাটি, কন্নড়, মালায়ালাম, পাঞ্জাবি এবং আরও অনেক ভাষার জন্য ব্যাপক সমর্থন।</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3 class="feature-title">সাংস্কৃতিক সচেতনতা</h3>
+                <p class="feature-description">আমাদের এআই সাংস্কৃতিক প্রসঙ্গ, বাগধারা এবং আঞ্চলিক অভিব্যক্তি বোঝে, এমন অনুবাদ সরবরাহ করে যা স্বাভাবিক এবং প্রামাণিক মনে হয়।</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3 class="feature-title">নিরাপদ এবং ব্যক্তিগত</h3>
+                <p class="feature-description">এন্টারপ্রাইজ-গ্রেড নিরাপত্তা নিশ্চিত করে যে আপনার ডেটা গোপনীয় থাকে। আমরা আপনার অনুমতি ছাড়া কখনও আপনার অনূদিত সামগ্রী সংরক্ষণ বা শেয়ার করি না।</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3 class="feature-title">মাল্টি-প্ল্যাটফর্ম</h3>
+                <p class="feature-description">যেকোনো ডিভাইস থেকে অপনি ভাণী অ্যাক্সেস করুন - ডেস্কটপ, মোবাইল বা ট্যাবলেট। সমস্ত প্ল্যাটফর্ম জুড়ে নির্বিঘ্ন অভিজ্ঞতা।</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits Section -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🎁 অপনি ভাণী ব্যবহারের সুবিধা</h2>
+        <div class="benefits-list">
+            <div class="benefit-item">
+                <h3 class="benefit-title">📈 যোগাযোগ দক্ষতায় বৃদ্ধি</h3>
+                <p class="benefit-description">ভুল বোঝাবুঝি এবং যোগাযোগে বিলম্ব দূর করুন। আমাদের প্ল্যাটফর্ম ভাষার বাধা জুড়ে স্পষ্ট, নির্ভুল বিনিময় সক্ষম করে, ব্যবসা, শিক্ষা এবং ব্যক্তিগত মিথস্ক্রিয়ায় উৎপাদনশীলতা উন্নত করে।</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">💰 ব্যয়-কার্যকর সমাধান</h3>
+                <p class="benefit-description">ঐতিহ্যবাহী মানব অনুবাদ পরিষেবার তুলনায় অনুবাদ খরচ ৮০% পর্যন্ত হ্রাস করুন। বাজেট ভাঙা ছাড়াই স্কেল করতে চাওয়া ব্যবসার জন্য নিখুঁত।</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🌟 উন্নত অ্যাক্সেসযোগ্যতা</h3>
+                <p class="benefit-description">আপনার সামগ্রী, পণ্য এবং পরিষেবা সমগ্র ভারত জুড়ে লক্ষ লক্ষ মানুষের জন্য অ্যাক্সেসযোগ্য করুন। ভাষার বাধা ভাঙুন এবং আপনার পৌঁছানো দ্রুতগতিতে প্রসারিত করুন।</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🤝 উন্নত গ্রাহক অভিজ্ঞতা</h3>
+                <p class="benefit-description">গ্রাহকদের তাদের পছন্দের ভাষায় সেবা দিন, বিশ্বাস এবং আনুগত্য তৈরি করুন। ব্যক্তিগত যোগাযোগ উচ্চতর সন্তুষ্টি এবং ধারণ হারের দিকে পরিচালিত করে।</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🎓 শিক্ষাগত ক্ষমতায়ন</h3>
+                <p class="benefit-description">শিক্ষার্থীদের বৈশ্বিক জ্ঞান সম্পদ অ্যাক্সেস করার সময় তাদের মাতৃভাষায় শিখতে সক্ষম করুন। অন্তর্ভুক্তিমূলক শিক্ষা সমর্থন করুন এবং শেখার বাধা হ্রাস করুন।</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🚀 ব্যবসায়িক বৃদ্ধি</h3>
+                <p class="benefit-description">স্থানীয়করণ সামগ্রী সহ সমগ্র ভারত জুড়ে নতুন বাজারে প্রসারিত করুন। অংশীদার, গ্রাহক এবং স্টেকহোল্ডারদের সাথে তাদের মাতৃভাষায় কার্যকরভাবে যোগাযোগ করুন।</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Impact Section -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🌟 আমাদের প্রভাব</h2>
+        <p class="section-subtitle">একবারে একটি অনুবাদ, সমগ্র ভারত জুড়ে পার্থক্য তৈরি করছি</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">১০+</div>
+                <div class="stat-label">সমর্থিত ভাষা</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">২৪/৭</div>
+                <div class="stat-label">উপলব্ধ সেবা</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">৯৫%+</div>
+                <div class="stat-label">নির্ভুলতার হার</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">সম্ভাবনা</div>
+            </div>
+        </div>
+        
+        <div class="impact-grid">
+            <div class="impact-card">
+                <div class="impact-emoji">👥</div>
+                <p class="impact-text">ভাষাগত বিভাজন জুড়ে সম্প্রদায়গুলিকে সংযুক্ত করা</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">💼</div>
+                <p class="impact-text">ব্যবসাগুলিকে বৃহত্তর দর্শকদের কাছে পৌঁছাতে ক্ষমতায়ন করা</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">📚</div>
+                <p class="impact-text">মাতৃভাষায় শিক্ষা অ্যাক্সেসযোগ্য করা</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">🏥</div>
+                <p class="impact-text">স্বাস্থ্যসেবা যোগাযোগ উন্নত করা</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">⚖️</div>
+                <p class="impact-text">আইনি এবং সরকারি পরিষেবা সহজতর করা</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">🎬</div>
+                <p class="impact-text">বিষয়বস্তু নির্মাতাদের সর্বভারতীয় দর্শকদের কাছে পৌঁছাতে সক্ষম করা</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How Language Barriers Affect India -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🚧 ভাষা বাধার চ্যালেঞ্জ</h2>
+        <div class="section-content">
+            <p>
+                ভারতের ভাষাগত বৈচিত্র্য, যখন বিপুল সাংস্কৃতিক সমৃদ্ধির উৎস, তখনও উল্লেখযোগ্য যোগাযোগ চ্যালেঞ্জ উপস্থাপন করে। ২২টি আনুষ্ঠানিকভাবে স্বীকৃত ভাষা এবং ১৯,৫০০-এরও বেশি উপভাষা সহ, ভাষার বাধা জীবনের প্রতিটি দিককে প্রভাবিত করে - শিক্ষা এবং স্বাস্থ্যসেবা থেকে ব্যবসা এবং শাসন পর্যন্ত।
+            </p>
+            <p>
+                <strong>শিক্ষায়:</strong> শিক্ষার্থীরা প্রায়ই সংগ্রাম করে যখন শিক্ষামূলক বিষয়বস্তু তাদের মাতৃভাষায় উপলব্ধ হয় না, যা কম বোঝাপড়া এবং উচ্চতর ঝরে পড়ার হার ঘটায়। অধ্যয়ন দেখায় যে নিজের মাতৃভাষায় শেখা শিক্ষাগত ফলাফল এবং জ্ঞানীয় বিকাশকে উল্লেখযোগ্যভাবে উন্নত করে।
+            </p>
+            <p>
+                <strong>স্বাস্থ্যসেবায়:</strong> ভাষার বাধা ভুল নির্ণয়, ওষুধের ত্রুটি এবং অপর্যাপ্ত চিকিৎসার কারণ হতে পারে। স্বাস্থ্যসেবা প্রদানকারীদের সাথে কার্যকরভাবে যোগাযোগ করতে অক্ষম রোগীরা তাদের সুস্থতা এবং পুনরুদ্ধারের জন্য গুরুতর ঝুঁকির সম্মুখীন হয়।
+            </p>
+            <p>
+                <strong>ব্যবসায়:</strong> কোম্পানিগুলি সম্ভাব্য গ্রাহক এবং বাজার সুযোগ হারায় যখন তারা আঞ্চলিক ভাষায় যোগাযোগ করতে পারে না। আন্তঃসীমা এবং আন্তঃরাজ্য ব্যবসায়িক আলোচনা প্রায়ই ভাষার পার্থক্যের কারণে বিলম্ব এবং ভুল বোঝাবুঝির সম্মুখীন হয়।
+            </p>
+            <p>
+                <strong>দৈনন্দিন জীবনে:</strong> সরকারি পরিষেবা অ্যাক্সেস করা, সরকারি নথি পড়া বা বিভিন্ন রাজ্যের মানুষের সাথে যোগাযোগ করার মতো সহজ কাজগুলি চ্যালেঞ্জিং বাধায় পরিণত হয়, সামাজিক গতিশীলতা এবং অর্থনৈতিক সুযোগ সীমিত করে।
+            </p>
+            <p>
+                অপনি ভাণী এই চ্যালেঞ্জগুলিকে সরাসরি সম্বোধন করে, একটি প্রযুক্তিগত সমাধান প্রদান করে যা ভারতের ভাষাগত বৈচিত্র্যকে সম্মান করে যখন সমস্ত ভাষা সম্প্রদায় জুড়ে নির্বিঘ্ন যোগাযোগ উৎসাহিত করে।
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="cta-title">ভাষা বাধা ভাঙতে প্রস্তুত?</h2>
+        <p class="cta-description">হাজার হাজার ব্যবহারকারীর সাথে যোগ দিন যারা তাদের অনুবাদ প্রয়োজনের জন্য অপনি ভাণীকে বিশ্বাস করে</p>
+        <div class="cta-buttons">
+            <a href="Translation_bengali.html" class="cta-btn cta-btn-primary">এখনই শুরু করুন</a>
+            <a href="index_Bengali.Html" class="cta-btn cta-btn-secondary">আপনার ভাষা বেছে নিন</a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="social-links">
+            <a href="#">💼</a>
+            <a href="#">𝕏</a>
+            <a href="#">📘</a>
+            <a href="#">📸</a>
+        </div>
+        <p>© ২০২৫ সর্বস্বত্ব সংরক্ষিত, অপনি ভাণী, টিম বিল্ড বটস, পিল্লাই কলেজ অফ ইঞ্জিনিয়ারিং</p>
+        <p>গোপনীয়তা নীতি | ব্যবহারের শর্তাবলী | কুকি নীতি</p>
+    </div>
+</footer>
+
+<script>
+    // Welcome Overlay Animation
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            document.getElementById('welcomeOverlay').classList.add('fade-out');
+        }, 3500); // Shows for 3.5 seconds to allow animations to complete
+    });
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(30px)';
+        section.style.transition = 'all 0.6s ease-out';
+        observer.observe(section);
+    });
+</script>
+
+</body>
+</html>

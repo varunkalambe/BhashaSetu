@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>વિડિઓને 22+ ભાષાઓમાં રૂપાંતરિત કરો AI જાદુ સાથે</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 180px 0 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 650px;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+        }
+
+        .hero .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .made-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .hero h1 {
+            font-size: 58px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 25px;
+            color: #fff;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(90deg, #ffd89b 0%, #19547b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            line-height: 1.7;
+            max-width: 750px;
+            margin: 0 auto 40px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 400;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px 35px;
+            min-width: 160px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #ffd89b 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff6b9d 0%, #c06c84 100%);
+            color: #fff;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 107, 157, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            padding: 16px 40px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
+        .trust-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 140px 0 80px;
+            }
+            .hero h1 {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="notification" id="notification">
+        <span id="notificationText">સૂચના સંદેશ</span>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">
+                    <img src="Logo.png" alt="અપની વાણી લોગો" class="logo-svg">
+                    <div>
+                        <div class="logo-text">અપની વાણી</div>
+                        <span class="logo-tagline">અવરોધો તોડવા, અવાજોને જોડવા</span>
+                    </div>
+                </div>
+                <ul class="nav-menu">
+    <li><a href="index_Gujrati.html">હોમ</a></li>
+    <li><a href="Home.html">ભાષા</a></li>
+    <li><a href="Translation_gujrati.html" class="active">વિડિઓ</a></li>
+    <li><a href="Voice_gujrati.html">અવાજ</a></li>
+    <li><a href="Summarise_Gujrati.html">સારાંશ</a></li>
+    <li><a href="index_Gujrati.html">અમારા વિશે</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="made-badge">
+                <span>📍</span>
+                <span>PCE માં બનાવેલ | AI દ્વારા સંચાલિત</span>
+            </div>
+            
+            <h1>
+                વિડિઓને <span class="highlight">22+<br>ભાષાઓમાં</span> રૂપાંતરિત કરો<br>
+                AI જાદુ સાથે
+            </h1>
+            
+            <p class="hero-subtitle">
+                ભારતના સૌથી અદ્યતન AI વિડિઓ અનુવાદ પ્લેટફોર્મ સાથે ભાષા અવરોધોને તોડો। 
+                સંપૂર્ણ લિપ-સિંક, કુદરતી અવાજ ક્લોનિંગ અને સાંસ્કૃતિક ચોકસાઈ—બધું એક ક્લિકમાં।
+            </p>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <span class="stat-number">22+</span>
+                    <span class="stat-label">ભાષાઓ</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">10+</span>
+                    <span class="stat-label">ભારતીય ભાષાઓ</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">99%</span>
+                    <span class="stat-label">ચોકસાઈ</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">2x</span>
+                    <span class="stat-label">ઝડપી</span>
+                </div>
+            </div>
+
+            <div class="hero-buttons">
+                <button class="btn-primary" onclick="document.getElementById('video-translate').scrollIntoView({behavior: 'smooth'})">
+                    🎬 હમણાં વિડિઓ અનુવાદ કરો
+                </button>
+                <button class="btn-secondary">
+                    ▶️ ડેમો જુઓ
+                </button>
+            </div>
+
+            <div class="trust-line">
+                <span>⭐</span>
+                <span>સમગ્ર ભારતમાં સામગ્રી સર્જકો, શિક્ષકો અને વ્યવસાયો દ્વારા વિશ્વાસપાત્ર</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="video-section" id="video-translate">
+        <div class="container">
+            <h2 class="section-title">🎥 વિડિઓ અનુવાદ સ્ટુડિયો</h2>
+            <p class="section-subtitle">તમારો વિડિઓ અપલોડ કરો અને AI-સંચાલિત ચોકસાઈ સાથે કોઈપણ ભાષામાં અનુવાદ કરો</p>
+            
+            <div class="upload-container">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📹</div>
+                    <div class="upload-text">
+                        <h3>તમારો વિડિઓ અપલોડ કરો</h3>
+                        <p>તમારી વિડિઓ ફાઇલને અહીં ડ્રેગ અને ડ્રોપ કરો, અથવા બ્રાઉઝ કરવા માટે ક્લિક કરો</p>
+                        <p class="file-note">સમર્થિત ફોર્મેટ્સ: MP4, AVI, MOV, WMV (મહત્તમ: 100MB)</p>
+                    </div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">ફાઇલ પસંદ કરો</button>
+                    <input type="file" id="fileInput" class="file-input" accept="video/*">
+                    
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="file-info" id="fileInfo">
+                        <strong>ફાઇલ પસંદ કરેલી:</strong> <span id="fileName"></span><br>
+                        <strong>કદ:</strong> <span id="fileSize"></span>
+                    </div>
+                </div>
+                
+                <div class="upload-controls">
+                    <div class="language-selector" id="languageSelector">
+                        <label><strong>થી:</strong></label>
+                        <select id="fromLang" onchange="showSelected('fromLang','fromNote')">
+                            <option value="gu">ગુજરાતી (GJ)</option>
+                            <option value="hi">હિન્દી (HN)</option>
+                            <option value="en">અંગ્રેજી (ENG)</option>
+                            <option value="bn">બંગાળી (BN)</option>
+                            <option value="ta">તમિલ (TM)</option>
+                            <option value="te">તેલુગુ (TG)</option>
+                            <option value="ml">મલયાલમ (ML)</option>
+                            <option value="kn">કન્નડ (KN)</option>
+                            <option value="mr">મરાઠી (MR)</option>
+                            <option value="pa">પંજાબી (PN)</option>
+                        </select>
+                        <p id="fromNote" class="lang-note">કૃપા કરીને સ્રોત ભાષા પસંદ કરો</p>
+                        
+                        <label><strong>માં:</strong></label>
+                        <select id="toLang" onchange="showSelected('toLang','toNote')">
+                            <option value="en">અંગ્રેજી (ENG)</option>
+                            <option value="hi">હિન્દી (HN)</option>
+                            <option value="gu">ગુજરાતી (GJ)</option>
+                            <option value="bn">બંગાળી (BN)</option>
+                            <option value="ta">તમિલ (TM)</option>
+                            <option value="te">તેલુગુ (TG)</option>
+                            <option value="ml">મલયાલમ (ML)</option>
+                            <option value="kn">કન્નડ (KN)</option>
+                            <option value="mr">મરાઠી (MR)</option>
+                            <option value="pa">પંજાબી (PN)</option>
+                        </select>
+                        <p id="toNote" class="lang-note">કૃપા કરીને લક્ષ્ય ભાષા પસંદ કરો</p>
+                    </div>
+                    
+                    <button class="translate-btn" id="translateBtn">🚀 વિડિઓ અનુવાદ કરો</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="services" style="background: rgba(255,255,255,0.1);">
+        <div class="container">
+            <h2 class="white-title">અપની વાણીનો ઉપયોગ કેવી રીતે કરવો</h2>
+            <div class="services-grid">
+                <div class="service-card"><h3>પગલું 1: વિડિઓ અપલોડ કરો</h3><p>"ફાઇલ પસંદ કરો" પર ક્લિક કરો અથવા તમારો વિડિઓ ડ્રેગ અને ડ્રોપ કરો।</p></div>
+                <div class="service-card"><h3>પગલું 2: ભાષાઓ પસંદ કરો</h3><p>સ્રોત અને લક્ષ્ય ભાષાઓ પસંદ કરો।</p></div>
+                <div class="service-card"><h3>પગલું 3: અનુવાદ કરો</h3><p>🚀 અનુવાદ બટન દબાવો।</p></div>
+                <div class="service-card"><h3>પગલું 4: ડાઉનલોડ કરો</h3><p>અનુવાદ પછી ડાઉનલોડ બટન ક્લિક કરો।</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="services">
+        <div class="container">
+            <h2 class="white-title">અમારી AI-સંચાલિત સેવાઓ</h2>
+            <div class="services-grid">
+                <div class="service-card"><h3>📄 ટેક્સ્ટ અને દસ્તાવેજ અનુવાદ</h3><p>દસ્તાવેજો અને પુસ્તકોનો અનુવાદ કરો।</p></div>
+                <div class="service-card"><h3>🎥 વિડિઓ અનુવાદ</h3><p>ઉપશીર્ષકો અને ડબિંગ સાથે વિડિઓ રૂપાંતરિત કરો।</p></div>
+                <div class="service-card"><h3>🎤 અવાજ અનુવાદ</h3><p>રીઅલ-ટાઇમ કુદરતી અવાજ અનુવાદ।</p></div>
+                <div class="service-card"><h3>💼 લાઇવ મીટિંગ અનુવાદ</h3><p>રીઅલ-ટાઇમ મીટિંગ્સમાં અવરોધો તોડો।</p></div>
+                <div class="service-card"><h3>🖼️ ચિત્ર ટેક્સ્ટ અનુવાદ</h3><p>ચિત્રોમાંથી ટેક્સ્ટ કાઢો અને અનુવાદ કરો।</p></div>
+                <div class="service-card"><h3>📝 સારાંશ સાધનો</h3><p>લાંબી સામગ્રી માટે AI સારાંશ।</p></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="social-links">
+                <a href="#">💼</a>
+                <a href="#">𝕏</a>
+                <a href="#">📘</a>
+                <a href="#">📸</a>
+            </div>
+            <p>© 2025 બધા અધિકારો અમુક્ત, અપની વાણી, ટીમ બિલ્ડ બોટ્સ, પિલ્લઈ કોલેજ ઓફ એન્જિનિયરિંગ</p>
+            <p>ગોપનીયતા નીતિ | ઉપયોગની શરતો | કૂકી નીતિ</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

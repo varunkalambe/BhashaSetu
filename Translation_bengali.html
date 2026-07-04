@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আপনি বাণী - বাধা ভেঙে, কণ্ঠস্বরকে যুক্ত করুন</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body style="font-family: 'Noto Sans Bengali', sans-serif;">
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText">বিজ্ঞপ্তি বার্তা</span>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">
+                    <img src="Logo.png" alt="আপনি বাণী লোগো" class="logo-svg">
+                    <div>
+                        <div class="logo-text">আপনি বাণী</div>
+                        <span class="logo-tagline">বাধা ভেঙে, কণ্ঠস্বরকে যুক্ত করুন</span>
+                    </div>
+                </div>
+                <ul class="nav-menu">
+    <li><a href="index_Bengali.html">হোম</a></li>
+    <li><a href="Home.html">ভাষা</a></li>
+    <li><a href="Translation_bengali.html" class="active">ভিডিও</a></li>
+    <li><a href="Voice_bengali.html">কণ্ঠ</a></li>
+    <li><a href="Summarise_Bengali.html">সারসংক্ষেপ</a></li>
+    <li><a href="index_Bengali.html">আমাদের সম্পর্কে</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="made-in-PCE"> PCE দ্বারা নির্মিত</div>
+            <h1>আপনি বাণী – বাধা ভেঙে, কণ্ঠস্বরকে যুক্ত করুন</h1>
+            <p>সহযোগিতা ও বৈচিত্র্যের ঐক্য। আপনি বাণীর সেরা AI অনুবাদ বৈশিষ্ট্যগুলি ভাষাকে বাধা নয়, বরং বৈশ্বিক সংলাপের দ্বার করে তোলে।</p>
+        </div>
+    </section>
+
+    <!-- Video Translation Section -->
+    <section class="video-section" id="video-translate">
+        <div class="container">
+            <h2 class="section-title">🎥 ভিডিও অনুবাদ স্টুডিও</h2>
+            <p class="section-subtitle">আপনার ভিডিও আপলোড করুন এবং AI এর সাহায্যে যেকোনো ভাষায় অনুবাদ করুন</p>
+            
+            <div class="upload-container">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📹</div>
+                    <div class="upload-text">
+                        <h3>আপনার ভিডিও আপলোড করুন</h3>
+                        <p>এখানে টেনে আনুন বা ক্লিক করে ব্রাউজ করুন</p>
+                        <p class="file-note">সমর্থিত ফরম্যাট: MP4, AVI, MOV, WMV (সর্বাধিক: 100MB)</p>
+                    </div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">ফাইল নির্বাচন করুন</button>
+                    <input type="file" id="fileInput" class="file-input" accept="video/*">
+                    
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="file-info" id="fileInfo">
+                        <strong>নির্বাচিত ফাইল:</strong> <span id="fileName"></span><br>
+                        <strong>আকার:</strong> <span id="fileSize"></span>
+                    </div>
+                </div>
+                
+                <div class="upload-controls">
+                    <!-- Language Selector -->
+                    <div class="language-selector" id="languageSelector">
+                        <div class="language-row">
+                            <label><strong>থেকে:</strong></label>
+                            <select id="fromLang" onchange="showSelected('fromLang','fromNote')">
+                                <option value="en">ইংরেজি (ENG)</option>
+                                <option value="hi">হিন্দি (HN)</option>
+                                <option value="bn">বাংলা (BN)</option>
+                                <option value="ta">তামিল (TM)</option>
+                                <option value="te">তেলুগু (TG)</option>
+                                <option value="ml">মালয়ালম (ML)</option>
+                                <option value="kn">কন্নড় (KN)</option>
+                                <option value="gu">গুজরাটি (GJ)</option>
+                                <option value="mr">মারাঠি (MR)</option>
+                                <option value="pa">পাঞ্জাবি (PN)</option>
+                            </select>
+                        </div>
+                        <p id="fromNote" class="lang-note">দয়া করে উৎস ভাষা নির্বাচন করুন</p>
+                        
+                        <div class="language-row">
+                            <label><strong>এ:</strong></label>
+                            <select id="toLang" onchange="showSelected('toLang','toNote')">
+                                <option value="hi">হিন্দি (HN)</option>
+                                <option value="en">ইংরেজি (ENG)</option>
+                                <option value="bn">বাংলা (BN)</option>
+                                <option value="ta">তামিল (TM)</option>
+                                <option value="te">তেলুগু (TG)</option>
+                                <option value="ml">মালয়ালম (ML)</option>
+                                <option value="kn">কন্নড় (KN)</option>
+                                <option value="gu">গুজরাটি (GJ)</option>
+                                <option value="mr">মারাঠি (MR)</option>
+                                <option value="pa">পাঞ্জাবি (PN)</option>
+                                <option value="es">স্প্যানিশ (SP)</option>
+                                <option value="fr">ফরাসি (FR)</option>
+                                <option value="de">জার্মান (DE)</option>
+                                <option value="ja">জাপানি (JP)</option>
+                                <option value="ko">কোরিয়ান (KR)</option>
+                                <option value="zh">চীনা (CH)</option>
+                                <option value="ar">আরবি (AR)</option>
+                            </select>
+                        </div>
+                        <p id="toNote" class="lang-note">দয়া করে লক্ষ্য ভাষা নির্বাচন করুন</p>
+                    </div>
+                    
+                    <button class="translate-btn" id="translateBtn">🚀 ভিডিও অনুবাদ করুন</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Use Section -->
+    <section class="services" style="background: rgba(255,255,255,0.1);">
+        <div class="container">
+            <h2 class="white-title">আপনি বাণী ব্যবহার করার নিয়ম</h2>
+            <div class="services-grid">
+                <div class="service-card"><h3>ধাপ ১: ভিডিও আপলোড করুন</h3><p>"ফাইল নির্বাচন করুন" ক্লিক করুন বা টেনে আনুন।</p></div>
+                <div class="service-card"><h3>ধাপ ২: ভাষা নির্বাচন করুন</h3><p>উৎস ও লক্ষ্য ভাষা নির্বাচন করুন।</p></div>
+                <div class="service-card"><h3>ধাপ ৩: অনুবাদ করুন</h3><p>🚀 অনুবাদ বোতাম চাপুন।</p></div>
+                <div class="service-card"><h3>ধাপ ৪: ডাউনলোড করুন</h3><p>অনুবাদ সম্পন্ন হলে ডাউনলোড বোতাম চাপুন।</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our AI-Powered Services Section -->
+    <section class="services">
+        <div class="container">
+            <h2 class="white-title">আমাদের AI-চালিত পরিষেবাসমূহ</h2>
+            <div class="services-grid">
+                <div class="service-card"><h3>পাঠ্য ও নথি অনুবাদ</h3><p>নথি ও বই অনুবাদ করুন।</p></div>
+                <div class="service-card"><h3>ভিডিও অনুবাদ</h3><p>সাবটাইটেল ও ডাবিং সহ ভিডিও পরিবর্তন করুন।</p></div>
+                <div class="service-card"><h3>ভয়েস অনুবাদ</h3><p>রিয়েল-টাইম প্রাকৃতিক ভয়েস অনুবাদ।</p></div>
+                <div class="service-card"><h3>লাইভ মিটিং অনুবাদ</h3><p>রিয়েল-টাইম মিটিংয়ে ভাষার বাধা দূর করুন।</p></div>
+                <div class="service-card"><h3>ছবি পাঠ অনুবাদ</h3><p>ছবি থেকে পাঠ তুলে অনুবাদ করুন।</p></div>
+                <div class="service-card"><h3>সারাংশ টুল</h3><p>দীর্ঘ কনটেন্টের জন্য AI সারাংশ তৈরি করুন।</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="social-links">
+                <a href="#">💼</a>
+                <a href="#">𝕏</a>
+                <a href="#">📘</a>
+                <a href="#">📸</a>
+            </div>
+            <p>© ২০২৫ সর্বস্বত্ব সংরক্ষিত, আপনি বাণী, টিম বিল্ড বটস, পিল্লাই কলেজ অফ ইঞ্জিনিয়ারিং</p>
+            <p>গোপনীয়তা নীতি | ব্যবহারের শর্তাবলী | কুকি নীতি</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Language select update
+        function showSelected(selectId, noteId) {
+            const select = document.getElementById(selectId);
+            const note = document.getElementById(noteId);
+            const selectedText = select.options[select.selectedIndex].text;
+            note.textContent = `আপনি নির্বাচন করেছেন: ${selectedText}`;
+        }
+    </script>
+
+</body>
+</html>

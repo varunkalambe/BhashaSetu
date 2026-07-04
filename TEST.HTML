@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About APNI VAANI - Breaking Barriers, Connecting Voices</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ================== Global Styles ================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ================== Welcome Overlay ================== */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeOut 0.8s ease-out 3s forwards;
+        }
+
+        .welcome-overlay.hidden {
+            display: none;
+        }
+
+        .welcome-logo-container {
+            text-align: center;
+            animation: scaleIn 1s ease-out;
+        }
+
+        .welcome-logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .welcome-title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            animation: slideUp 1s ease-out 0.3s backwards;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+            animation: slideUp 1s ease-out 0.6s backwards;
+        }
+
+        .welcome-tagline {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px;
+            font-style: italic;
+            animation: slideUp 1s ease-out 0.9s backwards;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            margin-top: 40px;
+            overflow: hidden;
+            animation: slideUp 1s ease-out 1.2s backwards;
+        }
+
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff9933, #138808);
+            border-radius: 10px;
+            animation: loadProgress 2.5s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes loadProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* ================== Floating Particles Overlay ================== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><circle cx="100" cy="100" r="3" fill="rgba(255,255,255,0.1)"><animateTransform attributeName="transform" type="translate" values="0,0; 50,-50; 0,0" dur="8s" repeatCount="indefinite"/></circle><circle cx="300" cy="200" r="2" fill="rgba(255,255,255,0.08)"><animateTransform attributeName="transform" type="translate" values="0,0; -30,40; 0,0" dur="6s" repeatCount="indefinite"/></circle><circle cx="500" cy="300" r="4" fill="rgba(255,255,255,0.12)"><animateTransform attributeName="transform" type="translate" values="0,0; 40,-30; 0,0" dur="10s" repeatCount="indefinite"/></circle><circle cx="700" cy="150" r="2.5" fill="rgba(255,255,255,0.09)"><animateTransform attributeName="transform" type="translate" values="0,0; -20,60; 0,0" dur="7s" repeatCount="indefinite"/></circle><circle cx="900" cy="400" r="3.5" fill="rgba(255,255,255,0.11)"><animateTransform attributeName="transform" type="translate" values="0,0; 35,-45; 0,0" dur="9s" repeatCount="indefinite"/></circle></svg>') repeat;
+            pointer-events: none;
+            z-index: -1;
+            animation: backgroundMove 20s linear infinite;
+        }
+
+        @keyframes backgroundMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+
+        body {
+            font-family: 'Inter', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ================== Header ================== */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover { transform: scale(1.05) rotate(2deg); }
+        .logo-svg { width: 60px; height: 60px; border-radius: 8px; }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-tagline { color: #666; font-size: 12px; }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        .nav-menu li a:hover,
+        .nav-menu li a.active {
+            color: #4A90E2;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        /* ================== Hero Section ================== */
+        .hero {
+            padding: 140px 0 80px;
+            text-align: center;
+            color: white;
+            margin-top: 80px;
+        }
+
+        .made-in-PCE {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff9933, #138808);
+            padding: 10px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 35px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hero h1 { 
+            font-size: 3.8rem; 
+            margin-bottom: 1.5rem; 
+            font-weight: 700;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero p { 
+            font-size: 1.3rem; 
+            max-width: 800px; 
+            margin: 0 auto 2rem; 
+            opacity: 0.95;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ================== Content Sections ================== */
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            margin: 40px 20px;
+            border-radius: 20px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(45deg, #4A90E2, #357ABD);
+            border-radius: 2px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+            line-height: 1.8;
+        }
+
+        .section-content {
+            max-width: 900px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            color: #555;
+            line-height: 1.9;
+            text-align: justify;
+        }
+
+        .section-content p {
+            margin-bottom: 20px;
+        }
+
+        /* ================== Vision & Mission Grid ================== */
+        .vision-mission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .vm-card {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+        }
+
+        .vm-card:hover {
+            transform: translateY(-10px);
+            border-color: #4A90E2;
+            box-shadow: 0 20px 50px rgba(74, 144, 226, 0.3);
+        }
+
+        .vm-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .vm-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .vm-description {
+            font-size: 1.05rem;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* ================== Features Grid ================== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #4A90E2;
+            box-shadow: 0 20px 50px rgba(74, 144, 226, 0.25);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .feature-title {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .feature-description {
+            color: #666;
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        /* ================== Stats Section ================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+            padding: 40px 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(74, 144, 226, 0.4);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        /* ================== Benefits List ================== */
+        .benefits-list {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .benefit-item {
+            background: white;
+            padding: 25px 30px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #4A90E2;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .benefit-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 8px 30px rgba(74, 144, 226, 0.2);
+        }
+
+        .benefit-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .benefit-description {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* ================== Impact Section ================== */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .impact-card {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%);
+            padding: 30px 25px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .impact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(74, 144, 226, 0.2);
+        }
+
+        .impact-emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .impact-text {
+            font-size: 1.05rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        /* ================== CTA Section ================== */
+        .cta-section {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            border-radius: 20px;
+            margin: 40px 20px;
+            box-shadow: 0 20px 60px rgba(74, 144, 226, 0.4);
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cta-btn-primary {
+            background: white;
+            color: #4A90E2;
+        }
+
+        .cta-btn-primary:hover {
+            background: #f8f9ff;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .cta-btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .cta-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        /* ================== Footer ================== */
+        .footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 50px 0;
+            margin-top: 80px;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.8rem;
+            margin: 0 15px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            color: #4A90E2;
+            transform: translateY(-3px);
+        }
+
+        .footer p {
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+
+        /* ================== Responsive ================== */
+        @media (max-width: 768px) {
+            .welcome-title { font-size: 2.5rem; }
+            .welcome-subtitle { font-size: 1.2rem; }
+            .welcome-tagline { font-size: 1rem; }
+            .welcome-logo { width: 120px; height: 120px; }
+            
+            .hero h1 { font-size: 2.5rem; }
+            .hero p { font-size: 1.1rem; }
+            .section-title { font-size: 2rem; }
+            .content-section { padding: 40px 25px; }
+            .nav-menu { gap: 15px; }
+            .vision-mission-grid { grid-template-columns: 1fr; }
+            .cta-title { font-size: 2rem; }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title { font-size: 2rem; }
+            .welcome-subtitle { font-size: 1rem; }
+            .welcome-logo { width: 100px; height: 100px; }
+            
+            .nav { flex-direction: column; gap: 20px; }
+            .hero h1 { font-size: 2rem; }
+            .section-title { font-size: 1.8rem; }
+            .stat-number { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Welcome Overlay -->
+<div class="welcome-overlay" id="welcomeOverlay">
+    <div class="welcome-logo-container">
+        <img src="Logo.png" alt="APNI VAANI Logo" class="welcome-logo">
+        <h1 class="welcome-title">APNI VAANI</h1>
+        <p class="welcome-subtitle">Breaking Barriers, Connecting Voices</p>
+        <p class="welcome-tagline">अपनी वाणी • আপনার কন্ঠস্বর • તમારો અવાજ</p>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+    <div class="container">
+        <nav class="nav">
+            <div class="logo">
+                <img src="Logo.png" alt="Apni Vani Logo" class="logo-svg">
+                <div>
+                    <div class="logo-text">APNI VAANI</div>
+                    <span class="logo-tagline">Breaking Barriers, Connecting Voices</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="Translation.html">Home</a></li>
+                <li><a href="Home.html">Language</a></li>
+                <li><a href="Translation.html">Video</a></li>
+                <li><a href="Voice.html">Voice</a></li>
+                <li><a href="Summarise.html">Summarise</a></li>
+                <li><a href="Detail.html" class="active">About</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="made-in-PCE">MADE BY BUILD-BOTS_5</div>
+        <h1>About APNI VAANI</h1>
+        <p>Empowering India's linguistic diversity through cutting-edge AI translation technology</p>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🌍 What is APNI VAANI?</h2>
+        <div class="section-content">
+            <p>
+                <strong>APNI VAANI</strong> is an innovative AI-powered translation platform designed to bridge language barriers across India's incredibly diverse linguistic landscape. With over 22 officially recognized languages and hundreds of regional dialects, India faces unique communication challenges that traditional translation methods struggle to address effectively.
+            </p>
+            <p>
+                Our platform leverages state-of-the-art artificial intelligence and machine learning technologies to provide seamless, accurate, and culturally sensitive translation services. Whether you're translating documents, videos, voice recordings, or live conversations, APNI VAANI ensures that language never stands between people and opportunities.
+            </p>
+            <p>
+                Born from the vision of creating an inclusive digital India, APNI VAANI represents more than just a translation tool—it's a movement towards linguistic equality, cultural preservation, and universal access to information. We believe that every voice deserves to be heard, understood, and valued, regardless of the language it speaks.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Vision & Mission -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">✨ Our Vision & Mission</h2>
+        <div class="vision-mission-grid">
+            <div class="vm-card">
+                <div class="vm-icon">🎯</div>
+                <h3 class="vm-title">Our Vision</h3>
+                <p class="vm-description">
+                    To create a linguistically inclusive India where every citizen can access information, services, and opportunities in their native language. We envision a future where language barriers no longer limit personal growth, business expansion, or social connectivity, enabling true unity in diversity across the nation.
+                </p>
+            </div>
+            <div class="vm-card">
+                <div class="vm-icon">🚀</div>
+                <h3 class="vm-title">Our Mission</h3>
+                <p class="vm-description">
+                    To develop and deliver cutting-edge AI translation solutions that are accessible, accurate, and culturally aware. We are committed to supporting all Indian languages, preserving linguistic heritage, and empowering individuals and businesses to communicate effectively across language boundaries while maintaining the richness and nuance of each language.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why APNI VAANI -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">💡 Why Choose APNI VAANI?</h2>
+        <p class="section-subtitle">Discover the features that make us India's preferred translation platform</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">AI-Powered Accuracy</h3>
+                <p class="feature-description">Advanced machine learning ensures translations that capture meaning, context, and cultural nuances with exceptional precision.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Lightning Fast</h3>
+                <p class="feature-description">Process thousands of words in seconds. Real-time translation for live conversations and instant document conversion.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3 class="feature-title">Multi-Language Support</h3>
+                <p class="feature-description">Comprehensive support for Hindi, English, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, and more.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <h3 class="feature-title">Cultural Awareness</h3>
+                <p class="feature-description">Our AI understands cultural contexts, idioms, and regional expressions, delivering translations that feel natural and authentic.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3 class="feature-title">Secure & Private</h3>
+                <p class="feature-description">Enterprise-grade security ensures your data remains confidential. We never store or share your translated content without permission.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3 class="feature-title">Multi-Platform</h3>
+                <p class="feature-description">Access APNI VAANI from any device—desktop, mobile, or tablet. Seamless experience across all platforms.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits Section -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🎁 Benefits of Using APNI VAANI</h2>
+        <div class="benefits-list">
+            <div class="benefit-item">
+                <h3 class="benefit-title">📈 Enhanced Communication Efficiency</h3>
+                <p class="benefit-description">Eliminate misunderstandings and communication delays. Our platform enables clear, accurate exchanges across language barriers, improving productivity in business, education, and personal interactions.</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">💰 Cost-Effective Solution</h3>
+                <p class="benefit-description">Reduce translation costs by up to 80% compared to traditional human translation services. Perfect for businesses looking to scale without breaking the budget.</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🌟 Improved Accessibility</h3>
+                <p class="benefit-description">Make your content, products, and services accessible to millions more people across India. Break down language barriers and expand your reach exponentially.</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🤝 Better Customer Experience</h3>
+                <p class="benefit-description">Serve customers in their preferred language, building trust and loyalty. Personalized communication leads to higher satisfaction and retention rates.</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🎓 Educational Empowerment</h3>
+                <p class="benefit-description">Enable students to learn in their mother tongue while accessing global knowledge resources. Support inclusive education and reduce learning barriers.</p>
+            </div>
+            <div class="benefit-item">
+                <h3 class="benefit-title">🚀 Business Growth</h3>
+                <p class="benefit-description">Expand into new markets across India with localized content. Communicate effectively with partners, customers, and stakeholders in their native languages.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Impact Section -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🌟 Our Impact</h2>
+        <p class="section-subtitle">Making a difference across India, one translation at a time</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">10+</div>
+                <div class="stat-label">Languages Supported</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Available Service</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">95%+</div>
+                <div class="stat-label">Accuracy Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">∞</div>
+                <div class="stat-label">Possibilities</div>
+            </div>
+        </div>
+        
+        <div class="impact-grid">
+            <div class="impact-card">
+                <div class="impact-emoji">👥</div>
+                <p class="impact-text">Connecting communities across linguistic divides</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">💼</div>
+                <p class="impact-text">Empowering businesses to reach wider audiences</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">📚</div>
+                <p class="impact-text">Making education accessible in native languages</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">🏥</div>
+                <p class="impact-text">Improving healthcare communication</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">⚖️</div>
+                <p class="impact-text">Facilitating legal and government services</p>
+            </div>
+            <div class="impact-card">
+                <div class="impact-emoji">🎬</div>
+                <p class="impact-text">Enabling content creators to reach pan-India audiences</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How Language Barriers Affect India -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">🚧 The Challenge of Language Barriers</h2>
+        <div class="section-content">
+            <p>
+                India's linguistic diversity, while being a source of immense cultural richness, also presents significant communication challenges. With 22 officially recognized languages and over 19,500 dialects, language barriers impact every aspect of life—from education and healthcare to business and governance.
+            </p>
+            <p>
+                <strong>In Education:</strong> Students often struggle when educational content is not available in their mother tongue, leading to lower comprehension and higher dropout rates. Studies show that learning in one's native language significantly improves educational outcomes and cognitive development.
+            </p>
+            <p>
+                <strong>In Healthcare:</strong> Language barriers can lead to misdiagnosis, medication errors, and inadequate treatment. Patients unable to communicate effectively with healthcare providers face serious risks to their wellbeing and recovery.
+            </p>
+            <p>
+                <strong>In Business:</strong> Companies lose potential customers and market opportunities when they cannot communicate in regional languages. Cross-border and inter-state business negotiations often face delays and misunderstandings due to language differences.
+            </p>
+            <p>
+                <strong>In Daily Life:</strong> Simple tasks like accessing government services, reading official documents, or communicating with people from different states become challenging obstacles, limiting social mobility and economic opportunity.
+            </p>
+            <p>
+                APNI VAANI addresses these challenges head-on, providing a technological solution that honors India's linguistic diversity while fostering seamless communication across all language communities.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <h2 class="cta-title">Ready to Break Language Barriers?</h2>
+        <p class="cta-description">Join thousands of users who trust APNI VAANI for their translation needs</p>
+        <div class="cta-buttons">
+            <a href="Translation.html" class="cta-btn cta-btn-primary">Get Started Now</a>
+            <a href="Home.html" class="cta-btn cta-btn-secondary">Choose Your Language</a>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container">
+        <div class="social-links">
+            <a href="#">💼</a>
+            <a href="#">𝕏</a>
+            <a href="#">📘</a>
+            <a href="#">📸</a>
+        </div>
+        <p>© 2025 All rights reserved, APNI VAANI, Team Build Bots, Pillai College of Engineering</p>
+        <p>Privacy Policy | Terms of Use | Cookie Policy</p>
+    </div>
+</footer>
+
+<script>
+    // Hide welcome overlay after animation completes
+    setTimeout(function() {
+        document.getElementById('welcomeOverlay').classList.add('hidden');
+    }, 3800);
+
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(30px)';
+        section.style.transition = 'all 0.6s ease-out';
+        observer.observe(section);
+    });
+</script>
+
+</body>
+</html>

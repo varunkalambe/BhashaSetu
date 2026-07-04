@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APNI VAANI - Language Selection</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fff;
+      min-height: 100vh;
+      color: #222;
+    }
+
+    .header {
+      background: none;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .nav-container {
+      max-width: 100%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 0 0 0;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+
+    .logo-icon img {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      animation: logoFloat 3s ease-in-out infinite;
+      filter: brightness(0.95) opacity(0.7)
+        drop-shadow(0 4px 15px rgba(99, 102, 241, 0.08));
+      transition: all 0.3s ease;
+    }
+
+    .logo-icon:hover img {
+      transform: scale(1.1) rotate(10deg);
+      filter: drop-shadow(0 6px 20px rgba(99, 102, 241, 0.5));
+    }
+
+    @keyframes logoFloat {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-8px) rotate(5deg);
+      }
+    }
+
+    .logo-text h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .logo-text p {
+      font-size: 14px;
+      opacity: 0.7;
+      color: #6b7280;
+    }
+
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    .page-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .page-title h2 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .page-title p {
+      font-size: 18px;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .language-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto 50px auto;
+    }
+
+    .language-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid rgba(99, 102, 241, 0.08);
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  cursor: pointer;
+  position: relative; /* needed for absolute button */
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.1),
+              0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s;
+  overflow: hidden; /* prevent button from enlarging card */
+}
+
+.language-card:hover {
+  box-shadow: 0 14px 36px rgba(30, 64, 175, 0.15),
+              0 2px 12px rgba(30, 64, 175, 0.1);
+}
+
+    .language-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .language-short {
+      font-size: 16px;
+      opacity: 0.8;
+      margin-bottom: 15px;
+    }
+
+    .start-btn {
+  display: none;
+  position: absolute; /* overlay button inside card */
+  bottom: 20px;      /* distance from bottom */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 36px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.language-card:hover .start-btn {
+  display: inline-block;
+}
+
+.start-btn:hover {
+  background: #1e40af;
+  transform: translateX(-50%) scale(1.05);
+}
+
+    @media (max-width: 900px) {
+      .language-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="nav-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <img src="Logo.png" alt="APNI VAANI Logo" />
+        </div>
+        <div class="logo-text">
+          <h1>APNI VAANI</h1>
+          <p>Breaking Barriers, Connecting Voices</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-title">
+      <h2>Select Your Preferred Language</h2>
+      <p>
+        Choose from our supported languages to get the best translation
+        experience tailored for you.
+      </p>
+    </div>
+
+    <div class="language-grid">
+      <div class="language-card" data-lang="bengali">
+        <div class="language-name">বাংলা</div>
+        <div class="language-short">(Bengali)</div>
+        <a class="start-btn" href="Detail_bengali.html">শুরু করুন</a>
+      </div>
+
+      <div class="language-card" data-lang="marathi">
+        <div class="language-name">मराठी</div>
+        <div class="language-short">(Marathi)</div>
+        <a class="start-btn" href="Detail_marathi.html">सुरू करा</a>
+      </div>
+
+      <div class="language-card" data-lang="gujrati">
+        <div class="language-name">ગુજરાતી</div>
+        <div class="language-short">(Gujarati)</div>
+        <a class="start-btn" href="Detail_gujrati.html">શરૂ કરો</a>
+      </div>
+
+      <div class="language-card" data-lang="punjabi">
+        <div class="language-name">ਪੰਜਾਬੀ</div>
+        <div class="language-short">(Punjabi)</div>
+        <a class="start-btn" href="Detail_punjabi.html">ਸ਼ੁਰੂ ਕਰੋ</a>
+      </div>
+
+      <div class="language-card" data-lang="english">
+        <div class="language-name">English</div>
+        <div class="language-short">(English)</div>
+        <a class="start-btn" href="Detail.html">Start</a>
+      </div>
+
+      <div class="language-card" data-lang="hindi">
+        <div class="language-name">हिंदी</div>
+        <div class="language-short">(Hindi)</div>
+        <a class="start-btn" href="Detail_hindi.html">शुरू करें</a>
+      </div>
+
+      <div class="language-card" data-lang="kannada">
+        <div class="language-name">ಕನ್ನಡ</div>
+        <div class="language-short">(Kannada)</div>
+        <a class="start-btn" href="Detail_Kannada.html">ಪ್ರಾರಂಭಿಸಿ</a>
+      </div>
+
+      <div
+        class="language-card"
+        style="min-width: 320px; max-width: 340px; cursor: default;"
+      >
+        <div class="language-name" style="font-size: 1.5rem;">
+          More regional languages coming soon ...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const cards = document.querySelectorAll(".language-card");
+      let activeCard = null;
+
+      cards.forEach((card) => {
+        card.addEventListener("click", (e) => {
+          // Allow link clicks to work normally
+          if (e.target.tagName.toLowerCase() === "a" || e.target.closest("a")) {
+            return;
+          }
+
+          // Selection logic
+          if (activeCard) activeCard.classList.remove("selected");
+          card.classList.add("selected");
+          activeCard = card;
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

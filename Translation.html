@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transform Videos Into 22+ Languages With AI Magic</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* Hero Section Styles */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 180px 0 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 650px;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+        }
+
+        .hero .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .made-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+
+        .pin-icon {
+            font-size: 16px;
+        }
+
+        .hero h1 {
+            font-size: 58px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 25px;
+            color: #fff;
+        }
+
+        .hero h1 .highlight {
+            background: linear-gradient(90deg, #ffd89b 0%, #19547b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            line-height: 1.7;
+            max-width: 750px;
+            margin: 0 auto 40px;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 400;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px 35px;
+            min-width: 160px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #ffd89b 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #ff6b9d 0%, #c06c84 100%);
+            color: #fff;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 107, 157, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #fff;
+            padding: 16px 40px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
+        .trust-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .star-icon {
+            color: #ffd700;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 140px 0 80px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .stat-card {
+                min-width: 140px;
+                padding: 15px 25px;
+            }
+
+            .stat-number {
+                font-size: 28px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        
+
+       /* ===== RESULT POPUP - COMPLETE IMPROVED VERSION ===== */
+
+/* Popup Overlay */
+.popup-overlay {
+    display: none;
+    position: fixed;
+    z-index: 10000; /* ✅ Higher z-index from old version */
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px); /* ✅ Preserved from old version */
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Popup Content Container */
+.popup-content {
+    position: relative;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* ✅ Purple gradient from old */
+    margin: auto;
+    padding: 30px;
+    border-radius: 24px; /* ✅ Rounded corners from old */
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6); /* ✅ Enhanced shadow from old */
+    
+    /* ✅ RESPONSIVE SIZING */
+    width: 90%;
+    max-width: 800px; /* ✅ Balanced between both versions */
+    max-height: 85vh;
+    overflow-y: auto;
+    
+    /* ✅ CENTER VERTICALLY */
+    top: 50%;
+    transform: translateY(-50%);
+    
+    /* ✅ ANIMATION from old version */
+    animation: popupSlide 0.4s ease;
+}
+
+/* REPLACE the animation with: */
+@keyframes popupSlide {
+    from { 
+        transform: translateY(calc(-50% - 50px));  /* ✅ Start 50px above center */
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(-50%);  /* ✅ End at center */
+        opacity: 1; 
+    }
+}
+
+
+/* ✅ CLOSE BUTTON - Improved from old circular design */
+.popup-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 32px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.popup-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+    color: #ff4444;
+}
+
+/* Popup Header */
+.popup-header {
+    padding: 20px 0 30px 0;
+    text-align: center;
+    color: white;
+}
+
+.popup-header h2 {
+    margin: 0 0 10px 0;
+    font-size: 36px;
+    color: white;
+}
+
+.popup-header p {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+/* Alternative: Direct h2 styling if no .popup-header wrapper */
+.popup-content h2 {
+    margin: 0 0 10px 0;
+    color: white;
+    font-size: 1.8rem;
+    text-align: center;
+}
+
+.popup-content > p {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: -5px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* Popup Body */
+.popup-body {
+    background: white;
+    padding: 30px;
+    border-radius: 0 0 24px 24px;
+}
+
+/* ✅ VIDEO CONTAINER - Combined best of both */
+.popup-video-container,
+.video-player {
+    width: 100%;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+}
+
+.popup-video-container video,
+.video-player video,
+#popupVideo {
+    width: 100%;
+    max-height: 50vh;
+    display: block;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ POPUP BUTTONS - Combined styling */
+.popup-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* ✅ PRIMARY BUTTON (Download) */
+.popup-buttons .btn-primary,
+.popup-btn-download,
+#popupDownloadBtn {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 40px;
+    border: none;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 150px;
+    max-width: 220px;
+    text-align: center;
+}
+
+.popup-buttons .btn-primary:hover,
+.popup-btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* ✅ SECONDARY BUTTON (Close/New) */
+.popup-buttons .btn-secondary,
+.popup-btn-close {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+    padding: 16px 40px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 150px;
+    max-width: 220px;
+}
+
+.popup-buttons .btn-secondary:hover,
+.popup-btn-close:hover {
+    background: rgba(102, 126, 234, 0.1);
+}
+
+/* ✅ MOBILE RESPONSIVE - Enhanced for all screens */
+@media (max-height: 700px) {
+    .popup-content {
+        max-height: 90vh;
+        padding: 20px;
+    }
+    
+    #popupVideo {
+        max-height: 40vh;
+    }
+    
+    .popup-content h2,
+    .popup-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .popup-body {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .popup-content {
+        width: 95%;
+        padding: 15px;
+    }
+    
+    .popup-body {
+        padding: 15px;
+    }
+    
+    .popup-buttons .btn-primary,
+    .popup-buttons .btn-secondary,
+    .popup-btn-download,
+    .popup-btn-close {
+        font-size: 14px;
+        padding: 12px 25px;
+        min-width: 120px;
+    }
+    
+    .popup-header h2,
+    .popup-content h2 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .popup-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .popup-buttons .btn-primary,
+    .popup-buttons .btn-secondary,
+    .popup-btn-download,
+    .popup-btn-close {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* ✅ DOWNLOAD BUTTON AS BUTTON ELEMENT */
+#popupDownloadBtn,
+.btn-secondary {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+#popupDownloadBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+.popup-buttons button,
+.popup-buttons a {
+    transition: transform 0.2s, background 0.3s;
+}
+
+.popup-buttons button:hover:not(:disabled),
+.popup-buttons a:hover {
+    transform: translateY(-2px);
+}
+
+.popup-buttons button:active:not(:disabled),
+.popup-buttons a:active {
+    transform: translateY(0);
+}
+
+
+    </style>
+</head>
+<body>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText">Notification message</span>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">
+                    <img src="Logo.png" alt="Apni Vani Logo" class="logo-svg">
+                    <div>
+                        <div class="logo-text">APNI VANI</div>
+                        <span class="logo-tagline">Breaking Barriers, Connecting Voices</span>
+                    </div>
+                </div>
+                <ul class="nav-menu">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Home.html">Language</a></li>
+    <li><a href="Translation.html" class="active">Video</a></li>
+    <li><a href="Voice.html">Voice</a></li>
+    <li><a href="Summarise.html">Summarise</a></li>
+    <li><a href="index.html">About</a></li>
+</ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="made-badge">
+                <span class="pin-icon">📍</span>
+                <span>MADE BY BUILD-BOTS_5</span>
+            </div>
+            
+            <h1>
+                Transform Videos Into <span class="highlight">22+<br>Languages</span><br>
+                With AI Magic
+            </h1>
+            
+            <p class="hero-subtitle">
+                Break language barriers with India's most advanced AI video translation platform. 
+                Perfect lip-sync, natural voice cloning, and cultural accuracy—all in one click.
+            </p>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+    <span class="stat-number">22+</span>
+    <span class="stat-label">Indian<br>Regional Languages</span>
+</div>
+
+                <div class="stat-card">
+                    <span class="stat-number">99%</span>
+                    <span class="stat-label">Accuracy</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">2x</span>
+                    <span class="stat-label">Faster</span>
+                </div>
+            </div>
+
+            <div class="hero-buttons">
+                <button class="btn-primary" onclick="document.getElementById('video-translate').scrollIntoView({behavior: 'smooth'})">
+                    🎬 Translate Video Now
+                </button>
+                <button class="btn-secondary">
+                    ▶️ Watch Demo
+                </button>
+            </div>
+
+            <div class="trust-line">
+                <span class="star-icon">⭐</span>
+                <span>Trusted by content creators, educators & businesses across India</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Translation Section -->
+    <section class="video-section" id="video-translate">
+        <div class="container">
+            <h2 class="section-title">🎥 Video Translation Studio</h2>
+            <p class="section-subtitle">Upload your video and translate it to any language with AI-powered precision</p>
+            
+            <div class="upload-container">
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📹</div>
+                    <div class="upload-text">
+                        <h3>Upload Your Video</h3>
+                        <p>Drag and drop your video file here, or click to browse</p>
+                        <p class="file-note">Supported formats: MP4, AVI, MOV, WMV (Max: 100MB)</p>
+                    </div>
+<button type="button" class="upload-btn">Choose File</button>
+<input type="file" id="videoFile" class="file-input" accept="video/*">
+
+                    
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="file-info" id="fileInfo">
+    <strong>File Selected:</strong> <span id="fileName"></span><br>
+    <strong>Size:</strong> <span id="fileSize"></span>
+</div>
+</div>
+
+<div class="upload-controls">
+    <div class="language-selector" id="languageSelector">
+        <label><strong>From:</strong></label>
+        <select id="fromLang" onchange="showSelected('fromLang','fromNote')">
+            <option value="en">English (ENG)</option>
+            <option value="hi">Hindi (HN)</option>
+            <option value="bn">Bengali (BN)</option>
+            <option value="ta">Tamil (TM)</option>
+            <option value="te">Telugu (TG)</option>
+            <option value="ml">Malayalam (ML)</option>
+            <option value="kn">Kannada (KN)</option>
+            <option value="gu">Gujarati (GJ)</option>
+            <option value="mr">Marathi (MR)</option>
+            <option value="pa">Punjabi (PN)</option>
+        </select>
+        <p id="fromNote" class="lang-note">Please select a source language</p>
+        
+        <label><strong>To:</strong></label>
+        <select id="toLang" onchange="showSelected('toLang','toNote')">
+            <option value="hi">Hindi (HN)</option>
+            <option value="en">English (ENG)</option>
+            <option value="bn">Bengali (BN)</option>
+            <option value="ta">Tamil (TM)</option>
+            <option value="te">Telugu (TG)</option>
+            <option value="ml">Malayalam (ML)</option>
+            <option value="kn">Kannada (KN)</option>
+            <option value="gu">Gujarati (GJ)</option>
+            <option value="mr">Marathi (MR)</option>
+            <option value="pa">Punjabi (PN)</option>
+            <option value="es">Spanish (SP)</option>
+            <option value="fr">French (FR)</option>
+            <option value="de">German (DE)</option>
+            <option value="ja">Japanese (JP)</option>
+            <option value="ko">Korean (KR)</option>
+            <option value="zh">Chinese (CH)</option>
+            <option value="ar">Arabic (AR)</option>
+        </select>
+        <p id="toNote" class="lang-note">Please select a target language</p>
+    </div>
+    
+    <button type="button" class="translate-btn" id="translateBtn">🚀 Translate Video</button>
+    <p class="processing-message" id="processingMessage">
+        ⏳ Translation may take a few moments. Please wait patiently...
+    </p>
+</div>
+
+                
+
+
+
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Use Section -->
+    <section class="services" style="background: rgba(255,255,255,0.1);">
+        <div class="container">
+            <h2 class="white-title">How to Use Apni Vani</h2>
+            <div class="services-grid">
+                <div class="service-card"><h3>Step 1: Upload Video</h3><p>Click "Choose File" or drag & drop your video.</p></div>
+                <div class="service-card"><h3>Step 2: Select Languages</h3><p>Choose source and target languages.</p></div>
+                <div class="service-card"><h3>Step 3: Translate</h3><p>Press the 🚀 Translate button.</p></div>
+                <div class="service-card"><h3>Step 4: Download</h3><p>Click the download button after translation.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services">
+        <div class="container">
+            <h2 class="white-title">Our AI-Powered Services</h2>
+            <div class="services-grid">
+                <div class="service-card"><h3>📄 Text & Document Translation</h3><p>Translate documents and books.</p></div>
+                <div class="service-card"><h3>🎥 Video Translation</h3><p>Convert videos with subtitles and dubbing.</p></div>
+                <div class="service-card"><h3>🎤 Voice Translation</h3><p>Real-time natural voice translation.</p></div>
+                <div class="service-card"><h3>💼 Live Meeting Translation</h3><p>Break barriers in real-time meetings.</p></div>
+                <div class="service-card"><h3>🖼️ Image Text Translation</h3><p>Extract & translate text from images.</p></div>
+                <div class="service-card"><h3>📝 Summarise Tools</h3><p>AI summarization for long content.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="social-links">
+                <a href="#">💼</a>
+                <a href="#">𝕏</a>
+                <a href="#">📘</a>
+                <a href="#">📸</a>
+            </div>
+            <p>© 2025 All rights reserved, Apni Vani, Team Build Bots, Pillai College of Engineering</p>
+            <p>Privacy Policy | Terms of Use | Cookie Policy</p>
+        </div>
+    </footer>
+
+
+    <!-- Result Popup - COMPLETE IMPROVED VERSION -->
+<div class="popup-overlay" id="resultPopup" style="display: none;" onclick="closePopup()">
+    <div class="popup-content" onclick="event.stopPropagation()">
+        <!-- Close Button -->
+        <button class="popup-close-btn" onclick="closePopup()" aria-label="Close popup">✕</button>
+        
+        <!-- Popup Title -->
+        <h2>✅ Translation Complete!</h2>
+        <p style="text-align: center; color: #aaa; margin-top: -10px; margin-bottom: 15px; font-size: 14px;">
+            Your video is ready to download
+        </p>
+        
+        <!-- Video Container -->
+        <div class="popup-video-container">
+            <video id="popupVideo" controls preload="metadata">
+                <source id="popupVideoSource" src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="popup-buttons">
+            <button id="popupDownloadBtn" class="btn-primary" type="button">
+    ⬇️ Download Video
+</button>
+
+            <button onclick="translateAnother()" class="btn-primary">
+                🔄 Translate Another
+            </button>
+            <button onclick="closePopup()" class="btn-primary">
+                ✕ Close
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>
