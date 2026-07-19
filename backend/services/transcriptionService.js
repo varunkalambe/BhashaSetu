@@ -1,3 +1,4 @@
+
 // services/transcriptionService.js - REAL AUDIO TRANSCRIPTION SERVICE
 import util from 'util';
 import { exec } from 'child_process';
@@ -6,7 +7,21 @@ import path from 'path';
 import { promisify } from 'util';
 import { translateText } from './translationService.js';
 
-const execPromise = util.promisify(exec);
+const execAsync = util.promisify(exec);
+
+function pythonSubprocessEnv(pythonBinPath) {
+  const envDir = path.dirname(pythonBinPath.replace(/^"|"$/g, ''));
+  const extraDirs = [
+    envDir,
+    path.join(envDir, 'Scripts'),
+    path.join(envDir, 'Library', 'bin'),
+  ].filter(p => fs.existsSync(p));
+  return {
+    ...process.env,
+    PATH: extraDirs.join(path.delimiter) + path.delimiter + (process.env.PATH || ''),
+  };
+}
+
 
 
 /**
@@ -30,13 +45,16 @@ export const transcribeWithLocalWhisper = async (audioPath, language) => {
   }
 
   // Build the command to execute the Python script
-  const command = `python "${scriptPath}" "${audioPath}" "${outputPath}" --language ${language}`;
-  
+  const pythonBin = process.env.PYTHON_PATH || 'python';
+  const command = `"${pythonBin}" "${scriptPath}" "${audioPath}" "${outputPath}" --language ${language}`;
+
   console.log(`[LocalWhisper] Executing command: ${command}`);
 
   try {
     // Execute the command and wait for it to complete
-    const { stdout, stderr } = await execPromise(command);
+    const { stdout, stderr } = await execAsync(command, {
+      env: pythonSubprocessEnv(pythonBin)
+    });
 
     if (stderr) {
       console.warn(`[LocalWhisper] Stderr: ${stderr}`);
@@ -50,7 +68,7 @@ export const transcribeWithLocalWhisper = async (audioPath, language) => {
 
       // Clean up the temporary directory
       fs.rmSync(tempDir, { recursive: true, force: true });
-      
+
       console.log(`[LocalWhisper] ✅ Process successful.`);
       return result;
     } else {
@@ -110,19 +128,19 @@ const transliterateIfNecessary = async (transcriptionResult, sourceLanguage, job
 // ===== MAIN TRANSCRIPTION FUNCTION - REFACTORED TO PREVENT HANGING =====
 export const transcribeAudio = async (audioPath, jobId, sourceLanguage, targetLanguage, options = {}) => {
   console.log(`[${jobId}] Starting enhanced transcription with multiple engines...`);
-  
+
   // ===== VALIDATE INPUT =====
   if (!fs.existsSync(audioPath)) {
     throw new Error(`Audio file not found: ${audioPath}`);
   }
-  
+
   // ===== PARSE OPTIONS (Kept from your original code) =====
   const {
     preferredEngine = 'openai',
     enableDiarization = false,
     enableEnhancement = true,
   } = options;
-  
+
   console.log(`[${jobId}] Transcription options:`, {
     engine: preferredEngine,
     sourceLanguage: sourceLanguage,
@@ -131,26 +149,26 @@ export const transcribeAudio = async (audioPath, jobId, sourceLanguage, targetLa
     enhancement: enableEnhancement
   });
 
-  
+
   // ===== SETUP DIRECTORIES (Kept from your original code) =====
   const tempDir = path.join(process.cwd(), `uploads/transcription/${jobId}`);
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
   }
   const transcriptionFile = path.join(tempDir, 'transcription_results.json');
-  
+
   // ✅ FIX: This function is now a pure async function. The 'new Promise' wrapper, which
   // was the cause of the hanging bug, has been removed. 'return' now resolves the promise,
   // and 'throw' now rejects it.
 
-  
+
 
   // --- PRIORITY 2: LOCAL WHISPER AI (FREE FALLBACK) ---
   try {
     console.log(`[${jobId}] Attempting local Whisper AI transcription fallback...`);
     // ✅ FIX: Calling the correct 'transcribeWithLocalWhisper' function.
     const transcriptionResult = await transcribeWithLocalWhisper(audioPath, sourceLanguage);
-    
+
     if (transcriptionResult && transcriptionResult.text) {
       console.log(`[${jobId}] ✅ Transcription successful with Local Whisper.`);
       const finalResult = await transliterateIfNecessary(transcriptionResult, sourceLanguage, jobId);
@@ -160,12 +178,12 @@ export const transcribeAudio = async (audioPath, jobId, sourceLanguage, targetLa
   } catch (error) {
     console.warn(`[${jobId}] Local Whisper AI fallback failed: ${error.message}. Falling back...`);
   }
-  
+
   // --- PRIORITY 3: GOOGLE SPEECH API ---
   try {
     console.log(`[${jobId}] Attempting Google Speech-to-Text API...`);
-    const transcriptionResult = await transcribeWithGoogleSpeech(audioPath, jobId, language, options);
-    
+    const transcriptionResult = await transcribeWithGoogleSpeech(audioPath, jobId, sourceLanguage, options);
+
     if (transcriptionResult && transcriptionResult.text) {
       console.log(`[${jobId}] ✅ Google Speech API transcription successful.`);
       await saveTranscriptionResults(transcriptionResult, transcriptionFile, jobId);
@@ -174,11 +192,11 @@ export const transcribeAudio = async (audioPath, jobId, sourceLanguage, targetLa
   } catch (error) {
     console.warn(`[${jobId}] Google Speech API failed: ${error.message}. Falling back...`);
   }
-  
+
   // --- FINAL FALLBACK: REAL AUDIO ANALYSIS ---
   try {
     console.log(`[${jobId}] All transcription models failed. Using real audio analysis fallback...`);
-    const transcriptionResult = await createRealAudioTranscription(audioPath, jobId, language);
+    const transcriptionResult = await createRealAudioTranscription(audioPath, jobId, sourceLanguage);
     await saveTranscriptionResults(transcriptionResult, transcriptionFile, jobId);
     return transcriptionResult;
   } catch (error) {
@@ -197,11 +215,11 @@ export const transcribeAudio = async (audioPath, jobId, sourceLanguage, targetLa
 // ===== WHISPER AI TRANSCRIPTION (WITH BUILT-IN WORD ALIGNMENT) =====
 const transcribeWithWhisper = async (audioPath, jobId, language = 'hi', options = {}) => {
   console.log(`[${jobId}] Starting Whisper AI transcription with word-level alignment...`);
-  
+
   const tempDir = path.join(process.cwd(), `uploads/transcription/${jobId}`);
   const whisperScript = path.join(tempDir, 'whisper_transcription.py');
   const resultsFile = path.join(tempDir, 'whisper_results.json');
-  
+
 // In file: transcriptionService.js
 // Inside function: transcribeWithWhisper
 
@@ -218,7 +236,7 @@ def transcribe_with_word_timestamps(audio_path, output_path, language):
     try:
         print(f"Loading Whisper model...")
         model = whisper.load_model("base")
-        
+
         print(f"Transcribing audio with language: {language}")
         result = model.transcribe(
             audio_path,
@@ -226,13 +244,13 @@ def transcribe_with_word_timestamps(audio_path, output_path, language):
             word_timestamps=True,
             verbose=False
         )
-        
+
         output_data = {
             "text": result["text"],
             "language": result["language"],
             "segments": []
         }
-        
+
         for segment in result["segments"]:
             segment_data = {
                 "start": segment["start"],
@@ -240,7 +258,7 @@ def transcribe_with_word_timestamps(audio_path, output_path, language):
                 "text": segment["text"],
                 "words": []
             }
-            
+
             if "words" in segment:
                 for word in segment["words"]:
                     word_data = {
@@ -250,16 +268,16 @@ def transcribe_with_word_timestamps(audio_path, output_path, language):
                         "probability": word.get("probability", 1.0)
                     }
                     segment_data["words"].append(word_data)
-            
+
             output_data["segments"].append(segment_data)
-        
+
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, ensure_ascii=False, indent=2)
-        
+
         print(f"Transcription completed successfully")
         print(f"Total words: {sum(len(s['words']) for s in output_data['segments'])}")
         return 0
-        
+
     except Exception as e:
         print(f"Error during transcription: {str(e)}", file=sys.stderr)
         return 1
@@ -268,17 +286,17 @@ if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Usage: python whisper_transcription.py <audio_path> <output_path> <language>")
         sys.exit(1)
-    
+
     audio_path = sys.argv[1]
     output_path = sys.argv[2]
     language = sys.argv[3]
-    
+
     sys.exit(transcribe_with_word_timestamps(audio_path, output_path, language))
 `;
 
 
   fs.writeFileSync(whisperScript, pythonScript, 'utf8');
-  
+
   const command = `python "${whisperScript}" "${audioPath}" "${resultsFile}" "${language}"`;
 
   try {
@@ -286,7 +304,7 @@ if __name__ == "__main__":
       timeout: 300000, // 5 minutes
       maxBuffer: 1024 * 1024 * 50
     });
-    
+
     if (stderr) {
       console.warn(`[${jobId}] Python script stderr: ${stderr}`);
       if (stderr.includes('ERROR:')) {
@@ -302,7 +320,7 @@ const validatedResultsFile = path.join(tempDir, 'whisper_results_validated.json'
 if (fs.existsSync(resultsFile)) {
     try {
         console.log(`[${jobId}] 🔍 Validating script for language: ${language}`);
-        
+
         const validateCommand = `python "${scriptFixerPath}" "${resultsFile}" "${validatedResultsFile}" "${language}"`;
         const { stdout: validateStdout, stderr: validateStderr } = await execAsync(validateCommand, {
             timeout: 30000,
@@ -347,12 +365,12 @@ if (fs.existsSync(resultsFile)) {
                 // Script mismatch detected but script is acceptable - skip re-transcription
                 console.log(`[${jobId}] ✅ Script mismatch detected, but ${detectedScript} is acceptable for ${language}`);
                 console.log(`[${jobId}] ✅ Skipping re-transcription (accepted scripts: ${acceptedScripts.join('/')})`);
-                
+
             } else {
                 // Script is NOT acceptable - need re-transcription
                 console.log(`[${jobId}] ⚠️ Script mismatch detected (expected: ${acceptedScripts.join('/')}, got: ${detectedScript || 'unknown'})`);
                 console.log(`[${jobId}] Re-transcribing with romanization...`);
-                
+
                 // CREATE NEW PYTHON SCRIPT WITH task='translate'
                 const retranscribeScript = `
 import sys
@@ -365,7 +383,7 @@ def transcribe_with_romanization(audio_path, output_path, source_language):
     try:
         print(f"Loading Whisper model for re-transcription...")
         model = whisper.load_model("base")
-        
+
         print(f"Transcribing with task='translate' to force romanization...")
         result = model.transcribe(
             audio_path,
@@ -374,13 +392,13 @@ def transcribe_with_romanization(audio_path, output_path, source_language):
             word_timestamps=True,
             verbose=False
         )
-        
+
         output_data = {
             "text": result["text"],
             "language": result["language"],
             "segments": []
         }
-        
+
         for segment in result["segments"]:
             segment_data = {
                 "start": segment["start"],
@@ -388,7 +406,7 @@ def transcribe_with_romanization(audio_path, output_path, source_language):
                 "text": segment["text"],
                 "words": []
             }
-            
+
             if "words" in segment:
                 for word in segment["words"]:
                     word_data = {
@@ -398,15 +416,15 @@ def transcribe_with_romanization(audio_path, output_path, source_language):
                         "probability": word.get("probability", 1.0)
                     }
                     segment_data["words"].append(word_data)
-            
+
             output_data["segments"].append(segment_data)
-        
+
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, ensure_ascii=False, indent=2)
-        
+
         print(f"✅ Re-transcription completed successfully")
         return 0
-        
+
     except Exception as e:
         print(f"Error during re-transcription: {str(e)}", file=sys.stderr)
         return 1
@@ -415,17 +433,17 @@ if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Usage: python script.py <audio_path> <output_path> <language>")
         sys.exit(1)
-    
+
     audio_path = sys.argv[1]
     output_path = sys.argv[2]
     source_language = sys.argv[3]
-    
+
     sys.exit(transcribe_with_romanization(audio_path, output_path, source_language))
                 `;
-                
+
                 const retranscribeScriptPath = path.join(tempDir, 'retranscribe.py');
                 fs.writeFileSync(retranscribeScriptPath, retranscribeScript, 'utf8');
-                
+
                 try {
                     const { stdout: retryStdout, stderr: retryStderr } = await execAsync(
                         `python "${retranscribeScriptPath}" "${audioPath}" "${resultsFile}" "${language}"`,
@@ -434,30 +452,30 @@ if __name__ == "__main__":
                             maxBuffer: 1024 * 1024 * 50
                         }
                     );
-                    
+
                     if (retryStderr) {
                         console.log(`[${jobId}] Re-transcription output: ${retryStderr.trim()}`);
                     }
-                    
+
                     console.log(`[${jobId}] ✅ Re-transcription completed with romanization`);
-                    
+
                     // Verify the re-transcribed file exists and has content
                     if (fs.existsSync(resultsFile)) {
                         const reTranscribedData = JSON.parse(fs.readFileSync(resultsFile, 'utf8'));
                         console.log(`[${jobId}] ✅ Re-transcribed text preview: ${reTranscribedData.text.substring(0, 100)}...`);
                     }
-                    
+
                 } catch (retryError) {
                     console.warn(`[${jobId}] Re-transcription failed: ${retryError.message}`);
                     console.log(`[${jobId}] Using original transcription`);
                 }
             }
-            
+
         } else {
             // ✅ FIX #2: Clear message when no validation issues detected
             console.log(`[${jobId}] ✅ Script validation passed - no re-transcription needed`);
         }
-        
+
     } catch (validateError) {
         console.warn(`[${jobId}] Script validation failed: ${validateError.message}`);
     }
@@ -468,29 +486,29 @@ if __name__ == "__main__":
 if (fs.existsSync(resultsFile)) {
   const resultsData = fs.readFileSync(resultsFile, 'utf8');
   const whisperResults = JSON.parse(resultsData);
-      
+
       // Calculate total words from segments
       const totalWords = whisperResults.segments.reduce((sum, seg) => {
         return sum + (seg.words ? seg.words.length : 0);
       }, 0);
-      
+
       // Calculate average confidence from word probabilities
       const avgConfidence = whisperResults.segments.reduce((sum, seg) => {
         const segmentWords = seg.words || [];
-        const segmentAvg = segmentWords.length > 0 
+        const segmentAvg = segmentWords.length > 0
           ? segmentWords.reduce((s, w) => s + (w.probability || 0.8), 0) / segmentWords.length
           : 0.8;
         return sum + segmentAvg;
       }, 0) / (whisperResults.segments.length || 1);
-      
+
       // Build complete results object with all required fields
       const results = {
         text: whisperResults.text,
         language: whisperResults.language,
         segments: whisperResults.segments,
         confidence: avgConfidence,
-        duration: whisperResults.segments.length > 0 
-          ? whisperResults.segments[whisperResults.segments.length - 1].end 
+        duration: whisperResults.segments.length > 0
+          ? whisperResults.segments[whisperResults.segments.length - 1].end
           : 0,
         word_count: totalWords,
         segment_count: whisperResults.segments.length,
@@ -501,10 +519,10 @@ if (fs.existsSync(resultsFile)) {
           total_segments: whisperResults.segments.length
         }
       };
-      
+
       console.log(`[${jobId}] Whisper AI completed: ${results.segment_count} segments, ${results.confidence.toFixed(3)} confidence`);
       console.log(`[${jobId}] Word-level alignment included for ${results.processing_stats.total_words} words`);
-      
+
       return results;
     } else {
       throw new Error('Whisper alignment results file not created.');
@@ -531,31 +549,31 @@ if (fs.existsSync(resultsFile)) {
 // ===== OPENAI WHISPER API TRANSCRIPTION =====
 const transcribeWithOpenAIWhisper = async (audioPath, jobId, language = 'hi', options = {}) => {
   console.log(`[${jobId}] Starting OpenAI Whisper API transcription...`);
-  
+
   try {
     // Check if API key is configured
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OpenAI API key not configured in environment variables');
     }
-    
+
     // Dynamically import OpenAI
     const { default: OpenAI } = await import('openai');
-    
+
     // Initialize OpenAI client
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
-    
+
     // Check file size (OpenAI limit is 25MB)
     const stats = fs.statSync(audioPath);
     const fileSizeInMB = stats.size / (1024 * 1024);
-    
+
     if (fileSizeInMB > 25) {
       throw new Error(`Audio file too large for OpenAI API: ${fileSizeInMB.toFixed(2)}MB (max 25MB)`);
     }
-    
+
     console.log(`[${jobId}] Uploading audio to OpenAI (${fileSizeInMB.toFixed(2)}MB)...`);
-    
+
     // Create transcription
     const transcription = await openai.audio.transcriptions.create({
       file: fs.createReadStream(audioPath),
@@ -564,9 +582,9 @@ const transcribeWithOpenAIWhisper = async (audioPath, jobId, language = 'hi', op
       response_format: "verbose_json",
       timestamp_granularities: ["segment"]
     });
-    
+
     console.log(`[${jobId}] ✅ OpenAI Whisper API transcription successful`);
-    
+
     // Process segments
     const segments = (transcription.segments || []).map((segment, index) => ({
       id: index + 1,
@@ -575,9 +593,9 @@ const transcribeWithOpenAIWhisper = async (audioPath, jobId, language = 'hi', op
       text: segment.text.trim(),
       confidence: 0.9
     }));
-    
+
     const totalDuration = segments.length > 0 ? segments[segments.length - 1].end : 0;
-    
+
     const result = {
       text: transcription.text,
       language: transcription.language || language,
@@ -593,11 +611,11 @@ const transcribeWithOpenAIWhisper = async (audioPath, jobId, language = 'hi', op
         file_size_mb: fileSizeInMB
       }
     };
-    
+
     console.log(`[${jobId}] Transcribed ${result.segment_count} segments, duration: ${result.duration.toFixed(2)}s`);
-    
+
     return result;
-    
+
   } catch (error) {
     console.error(`[${jobId}] OpenAI Whisper API failed:`, error.message);
     throw error;
@@ -608,12 +626,12 @@ const transcribeWithOpenAIWhisper = async (audioPath, jobId, language = 'hi', op
 // ===== GOOGLE SPEECH API TRANSCRIPTION =====
 const transcribeWithGoogleSpeech = async (audioPath, jobId, language = 'hi', options = {}) => {
   console.log(`[${jobId}] Starting Google Speech API transcription...`);
-  
+
   try {
     // This would require Google Cloud credentials and implementation
     // For now, throw an error to move to next method
     throw new Error('Google Speech API not configured');
-    
+
   } catch (error) {
     console.error(`[${jobId}] Google Speech API failed:`, error.message);
     throw error;
@@ -623,17 +641,17 @@ const transcribeWithGoogleSpeech = async (audioPath, jobId, language = 'hi', opt
 // ===== REAL AUDIO ANALYSIS - NO PLACEHOLDERS =====
 const createRealAudioTranscription = async (audioPath, jobId, language = 'hi') => {
   console.log(`[${jobId}] Creating transcription from real audio analysis...`);
-  
+
   try {
     // Get actual audio duration and properties
     const duration = await getAudioDuration(audioPath);
     const audioProperties = await analyzeAudioProperties(audioPath, jobId);
-    
+
     console.log(`[${jobId}] Audio analysis: ${duration.toFixed(2)}s, ${audioProperties.speech_detected ? 'speech detected' : 'no speech detected'}`);
-    
+
     // Detect speech segments using silence detection
     const speechSegments = await detectSpeechSegments(audioPath, jobId);
-    
+
     // Create meaningful segments based on actual audio analysis
     const segments = speechSegments.map((segment, index) => ({
       id: index + 1,
@@ -645,9 +663,9 @@ const createRealAudioTranscription = async (audioPath, jobId, language = 'hi') =
       amplitude_level: segment.amplitude_level,
       needs_actual_transcription: true
     }));
-    
+
     const fullText = segments.map(s => s.text).join(' ');
-    
+
     const transcriptionResult = {
       text: fullText,
       language: language,
@@ -669,11 +687,11 @@ const createRealAudioTranscription = async (audioPath, jobId, language = 'hi') =
         confidence_avg: audioProperties.overall_confidence
       }
     };
-    
+
     console.log(`[${jobId}] Real audio analysis completed: ${segments.length} speech segments detected`);
-    
+
     return transcriptionResult;
-    
+
   } catch (error) {
     console.error(`[${jobId}] Real audio analysis failed:`, error.message);
     throw new Error(`Real audio transcription failed: ${error.message}`);
@@ -684,26 +702,26 @@ const createRealAudioTranscription = async (audioPath, jobId, language = 'hi') =
 const analyzeAudioProperties = async (audioPath, jobId) => {
   try {
     console.log(`[${jobId}] Analyzing audio properties...`);
-    
+
     // Get audio statistics using FFmpeg
     const statsCommand = `ffmpeg -i "${audioPath}" -af "astats=metadata=1:reset=1" -f null - 2>&1`;
     const { stdout, stderr } = await execAsync(statsCommand, { timeout: 30000 });
-    
+
     const analysisOutput = stderr;
-    
+
     // Parse audio statistics
     const rmsLevelMatch = analysisOutput.match(/RMS level dB: ([-\d.]+)/);
     const peakLevelMatch = analysisOutput.match(/Peak level dB: ([-\d.]+)/);
     const dynamicRangeMatch = analysisOutput.match(/Dynamic range: ([\d.]+)/);
-    
+
     const rmsLevel = rmsLevelMatch ? parseFloat(rmsLevelMatch[1]) : -40;
     const peakLevel = peakLevelMatch ? parseFloat(peakLevelMatch[1]) : -20;
     const dynamicRange = dynamicRangeMatch ? parseFloat(dynamicRangeMatch[1]) : 10;
-    
+
     // Determine if speech is likely present
     const speechDetected = rmsLevel > -60 && dynamicRange > 5;
     const confidenceLevel = speechDetected ? Math.min(0.8, (rmsLevel + 60) / 50) : 0.3;
-    
+
     return {
       rms_level_db: rmsLevel,
       peak_level_db: peakLevel,
@@ -712,10 +730,10 @@ const analyzeAudioProperties = async (audioPath, jobId) => {
       overall_confidence: confidenceLevel,
       analysis_completed: true
     };
-    
+
   } catch (error) {
     console.warn(`[${jobId}] Audio analysis failed, using defaults:`, error.message);
-    
+
     return {
       rms_level_db: -40,
       peak_level_db: -20,
@@ -731,18 +749,18 @@ const analyzeAudioProperties = async (audioPath, jobId) => {
 const detectSpeechSegments = async (audioPath, jobId) => {
   try {
     console.log(`[${jobId}] Detecting speech segments using silence detection...`);
-    
+
     // Use FFmpeg to detect silence and infer speech segments
     const silenceCommand = `ffmpeg -i "${audioPath}" -af silencedetect=noise=-50dB:duration=0.5 -f null - 2>&1`;
     const { stdout, stderr } = await execAsync(silenceCommand, { timeout: 60000 });
-    
+
     const silenceOutput = stderr;
     const duration = await getAudioDuration(audioPath);
-    
+
     // Parse silence detection output
     const silenceStarts = [];
     const silenceEnds = [];
-    
+
     const lines = silenceOutput.split('\n');
     for (const line of lines) {
       if (line.includes('silence_start:')) {
@@ -754,14 +772,14 @@ const detectSpeechSegments = async (audioPath, jobId) => {
         if (match) silenceEnds.push(parseFloat(match[1]));
       }
     }
-    
+
     // Create speech segments between silences
     const speechSegments = [];
     let currentStart = 0;
-    
+
     for (let i = 0; i < silenceStarts.length; i++) {
       const silenceStart = silenceStarts[i];
-      
+
       // Add speech segment before silence
       if (silenceStart > currentStart + 1) { // At least 1 second of speech
         speechSegments.push({
@@ -771,13 +789,13 @@ const detectSpeechSegments = async (audioPath, jobId) => {
           amplitude_level: 'normal'
         });
       }
-      
+
       // Update current start to end of silence
       if (i < silenceEnds.length) {
         currentStart = silenceEnds[i];
       }
     }
-    
+
     // Add final speech segment if needed
     if (currentStart < duration - 1) {
       speechSegments.push({
@@ -787,7 +805,7 @@ const detectSpeechSegments = async (audioPath, jobId) => {
         amplitude_level: 'normal'
       });
     }
-    
+
     // If no segments detected, create one segment for entire audio
     if (speechSegments.length === 0) {
       speechSegments.push({
@@ -797,23 +815,23 @@ const detectSpeechSegments = async (audioPath, jobId) => {
         amplitude_level: 'low'
       });
     }
-    
+
     console.log(`[${jobId}] Detected ${speechSegments.length} speech segments`);
-    
+
     return speechSegments;
-    
+
   } catch (error) {
     console.warn(`[${jobId}] Speech segment detection failed:`, error.message);
-    
+
     // Fallback: create segments based on duration
     const duration = await getAudioDuration(audioPath);
     const segmentCount = Math.max(1, Math.floor(duration / 5));
     const segments = [];
-    
+
     for (let i = 0; i < segmentCount; i++) {
       const start = i * (duration / segmentCount);
       const end = (i + 1) * (duration / segmentCount);
-      
+
       segments.push({
         start: start,
         end: end,
@@ -821,7 +839,7 @@ const detectSpeechSegments = async (audioPath, jobId) => {
         amplitude_level: 'unknown'
       });
     }
-    
+
     return segments;
   }
 };
@@ -850,7 +868,7 @@ const saveTranscriptionResults = async (results, filePath, jobId) => {
       engine: results.transcription_engine,
       confidence: results.confidence
     };
-    
+
     fs.writeFileSync(filePath, JSON.stringify(transcriptionData, null, 2), 'utf8');
     console.log(`[${jobId}] Transcription results saved to: ${filePath}`);
   } catch (error) {
@@ -861,14 +879,14 @@ const saveTranscriptionResults = async (results, filePath, jobId) => {
 // ===== ENHANCED TRANSCRIPTION WITH POST-PROCESSING =====
 export const transcribeAudioEnhanced = async (audioPath, jobId, options = {}) => {
   console.log(`[${jobId}] Starting enhanced transcription with post-processing...`);
-  
+
   try {
     // Get base transcription
     const transcription = await transcribeAudio(audioPath, jobId, options);
-    
+
     // Apply post-processing enhancements
     const enhanced = await applyPostProcessing(transcription, jobId, options);
-    
+
     return enhanced;
   } catch (error) {
     console.error(`[${jobId}] Enhanced transcription failed:`, error.message);
@@ -879,13 +897,13 @@ export const transcribeAudioEnhanced = async (audioPath, jobId, options = {}) =>
 // ===== POST-PROCESSING ENHANCEMENTS =====
 const applyPostProcessing = async (transcription, jobId, options = {}) => {
   console.log(`[${jobId}] Applying post-processing enhancements...`);
-  
+
   try {
     const enhanced = { ...transcription };
-    
+
     // Text cleaning
     enhanced.text = cleanTranscriptionText(enhanced.text);
-    
+
     // Segment optimization
     if (enhanced.segments) {
       enhanced.segments = enhanced.segments.map(segment => ({
@@ -893,10 +911,10 @@ const applyPostProcessing = async (transcription, jobId, options = {}) => {
         text: cleanTranscriptionText(segment.text)
       }));
     }
-    
+
     // Confidence adjustment
     enhanced.confidence = Math.min(0.95, enhanced.confidence * 1.1);
-    
+
     // Add enhancement metadata
     enhanced.post_processed = true;
     enhanced.enhancements_applied = [
@@ -904,9 +922,9 @@ const applyPostProcessing = async (transcription, jobId, options = {}) => {
       'segment_optimization',
       'confidence_adjustment'
     ];
-    
+
     console.log(`[${jobId}] Post-processing completed`);
-    
+
     return enhanced;
   } catch (error) {
     console.error(`[${jobId}] Post-processing failed:`, error.message);
@@ -917,7 +935,7 @@ const applyPostProcessing = async (transcription, jobId, options = {}) => {
 // ===== TEXT CLEANING FUNCTION =====
 const cleanTranscriptionText = (text) => {
   if (!text || typeof text !== 'string') return '';
-  
+
   return text
     .trim()
     .replace(/\s+/g, ' ') // Multiple spaces to single space
@@ -931,7 +949,7 @@ const cleanTranscriptionText = (text) => {
 // ===== VALIDATE TRANSCRIPTION QUALITY =====
 export const validateTranscriptionQuality = (transcription, jobId) => {
   console.log(`[${jobId}] Validating transcription quality...`);
-  
+
   try {
     const validation = {
       overall_quality: 'unknown',
@@ -942,7 +960,7 @@ export const validateTranscriptionQuality = (transcription, jobId) => {
       engine_used: transcription.transcription_engine || 'unknown',
       issues: []
     };
-    
+
     // Quality assessment
     if (validation.confidence_score >= 0.8) {
       validation.overall_quality = 'excellent';
@@ -953,26 +971,26 @@ export const validateTranscriptionQuality = (transcription, jobId) => {
     } else {
       validation.overall_quality = 'poor';
     }
-    
+
     // Check for issues
     if (!transcription.text || transcription.text.length < 10) {
       validation.issues.push('text_too_short');
     }
-    
+
     if (validation.segment_count === 0) {
       validation.issues.push('no_segments');
     }
-    
+
     if (validation.confidence_score < 0.5) {
       validation.issues.push('low_confidence');
     }
-    
+
     console.log(`[${jobId}] Quality validation: ${validation.overall_quality} (${validation.confidence_score.toFixed(2)} confidence)`);
-    
+
     return validation;
   } catch (error) {
     console.error(`[${jobId}] Quality validation failed:`, error.message);
-    
+
     return {
       overall_quality: 'error',
       confidence_score: 0,

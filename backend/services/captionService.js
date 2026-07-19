@@ -245,49 +245,77 @@ console.log(`[${jobId}] Step 1/3: Generating WebVTT captions...`);
 };
 
 
-export const generateAccurateCaptions = async (translatedWordAlignment, translatedText, jobId, targetLanguage) => {
+export const generateAccurateCaptions = async (translatedWordAlignment, translatedText, jobId, targetLanguage, knownAudioDuration = null) => {
   console.log(`[${jobId}] 📝 GENERATING VTT CAPTIONS`);
-  
+
   const config = getConfig(targetLanguage);
   console.log(`[${jobId}] Language: ${config.name}, Max: ${config.maxWords} words/${config.maxChars} chars`);
-  
+
   const text = translatedText.text || translatedText;
   const segments = translatedWordAlignment?.segments || [];
-  
+
   if (!text) {
     throw new Error('Translated text is required for caption generation');
   }
-  
+
   console.log(`[${jobId}] Original text: ${text.length} chars, ${segments.length} segments`);
-  
+
   const chunks = chunkText(text, config);
   console.log(`[${jobId}] ✅ Chunked into ${chunks.length} captions (was ${segments.length})`);
-  
-  const startTime = segments[0]?.start || 0;
-  const endTime = segments[segments.length - 1]?.end || 30;
-  const totalDuration = endTime - startTime;
+
+  // AFTER
+// ✅ FIX: `segments` here comes from the SOURCE-language (pre-translation)
+// Whisper alignment — it describes how long the ORIGINAL speaker took to
+// say the ORIGINAL words, which can differ a lot from how long the
+// translated speech actually runs. Anchoring the caption window to it
+// silently truncated captions to the source clip's speech span (e.g. 5.3s)
+// even when the real translated audio/video is a full 8s. `knownAudioDuration`
+// is measured directly from the actual translated-audio file by the caller
+// (getAudioDurationForDrift(filePaths.translatedAudio)) and must take
+// priority whenever it's available.
+  let startTime = 0;
+  let endTime = (knownAudioDuration && knownAudioDuration > 0.5) ? knownAudioDuration : null;
+
+  if (endTime === null) {
+    // No reliable measured duration was passed in — fall back to the old
+    // source-alignment-derived window (better than nothing).
+    startTime = segments[0]?.start ?? 0;
+    endTime = segments[segments.length - 1]?.end ?? 8;
+  }
+
+  let totalDuration = endTime - startTime;
+
+  const MIN_SANE_DURATION = 0.5; // seconds
+  if (!isFinite(totalDuration) || totalDuration < MIN_SANE_DURATION) {
+    console.warn(`[${jobId}] ⚠️ Caption window looked invalid (${totalDuration}s) — falling back to a safe 8s default.`);
+    startTime = 0;
+    endTime = 8;
+    totalDuration = endTime - startTime;
+  }
+
+  console.log(`[${jobId}] 🕐 Caption window: ${startTime.toFixed(2)}s → ${endTime.toFixed(2)}s (source: ${knownAudioDuration ? 'measured translated-audio duration' : 'source-language alignment fallback'})`);
   const durationPerChunk = Math.min(totalDuration / chunks.length, 6.0);
-  
+
   const captions = [];
   chunks.forEach((chunk, i) => {
     const start = startTime + (i * durationPerChunk);
     const end = Math.min(start + durationPerChunk, endTime);
     captions.push({ start, end, text: chunk });
   });
-  
+
   let vtt = `WEBVTT\nKind: captions\nLanguage: ${targetLanguage}\n\n`;
   captions.forEach((cap, i) => {
     vtt += `${i + 1}\n${formatVTTTime(cap.start)} --> ${formatVTTTime(cap.end)}\n${cap.text}\n\n`;
   });
-  
+
   const captionsDir = './uploads/captions';
   if (!fs.existsSync(captionsDir)) {
     fs.mkdirSync(captionsDir, { recursive: true });
   }
-  
+
   const vttPath = path.join(captionsDir, `${jobId}_captions_accurate.vtt`);
   fs.writeFileSync(vttPath, vtt, 'utf8');
-  
+
   console.log(`[${jobId}] ✅ VTT saved: ${captions.length} captions, avg ${durationPerChunk.toFixed(2)}s each`);
   return vttPath;
 };

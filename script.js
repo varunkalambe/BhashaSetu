@@ -45,7 +45,7 @@ window.addEventListener('load', () => {
 
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000'  // ✅ Development - backend on port 5000
+    ? `http://${window.location.hostname}:${window.location.port || 7860}`  // ✅ Development - matches whatever port the page is served on
     : '';  // ✅ Production - use relative URLs (empty string)
 
 
@@ -465,8 +465,9 @@ async function uploadVideoToBackend(file, fromLang, toLang) {
     }
 }
 
-// ✅ STATUS CHECKING WITH FIXED 5-SECOND POLLING
+// ✅ STATUS CHECKING WITH FIXED 12-SECOND POLLING
 let pollCount = 0;
+const POLL_INTERVAL_MS = 15000; // ✅ CHANGED from 12000 to 15000 (15s)
 
 async function checkProcessingStatus(jobId) {
     console.log(`🔍 [${new Date().toISOString()}] Checking status for job: ${jobId} (poll #${pollCount + 1})`);
@@ -505,10 +506,10 @@ document.getElementById('processingMessage').classList.remove('show');
             return;
         }
 
-        // ✅ CONTINUE POLLING EVERY 5 SECONDS
+        // ✅ CONTINUE POLLING EVERY 12 SECONDS
         pollCount++;
-        console.log(`⏳ Still processing... checking again in 5s (poll #${pollCount})`);
-        window.statusCheckTimeout = setTimeout(() => checkProcessingStatus(jobId), 5000);
+        console.log(`⏳ Still processing... checking again in 12s (poll #${pollCount})`);
+        window.statusCheckTimeout = setTimeout(() => checkProcessingStatus(jobId), POLL_INTERVAL_MS);
 
     } catch (error) {
     console.error('❌ Status check error:', error);
@@ -519,8 +520,8 @@ document.getElementById('processingMessage').classList.remove('show');
     // ✅ RESET ON ERROR AND RETRY
     pollCount = 0;
 
-    console.log('🔄 Retrying in 5 seconds...');
-    setTimeout(() => checkProcessingStatus(jobId), 5000);
+    console.log('🔄 Retrying in 12 seconds...');
+    setTimeout(() => checkProcessingStatus(jobId), POLL_INTERVAL_MS);
 }
 }
 

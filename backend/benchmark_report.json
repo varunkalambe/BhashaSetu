@@ -1,0 +1,48 @@
+{
+  "video": "D:\\Desktop Final\\BhashaSetu major project\\BhashaSetu\\backend\\uploads\\originals\\sample-5s-720p.mp4",
+  "stages": [
+    {
+      "stage": "audio_extraction_ffmpeg",
+      "seconds": 0.29,
+      "success": true,
+      "error": null
+    },
+    {
+      "stage": "demucs_separation",
+      "seconds": 95.38,
+      "success": true,
+      "error": null
+    },
+    {
+      "stage": "whisper_transcription",
+      "seconds": 3463.68,
+      "success": true,
+      "error": null
+    },
+    {
+      "stage": "diarization_prosody",
+      "seconds": 29.17,
+      "success": true,
+      "error": null
+    },
+    {
+      "stage": "indictrans2_translation",
+      "seconds": 20.47,
+      "success": true,
+      "error": null
+    },
+    {
+      "stage": "tts_synthesis",
+      "seconds": 7.4,
+      "success": true,
+      "error": null
+    },
+    {
+      "stage": "mfa_forced_alignment",
+      "seconds": 70.57,
+      "success": true,
+      "error": null
+    }
+  ],
+  "total_seconds": 3686.96
+}

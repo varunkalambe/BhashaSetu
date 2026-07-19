@@ -8,7 +8,10 @@ const testConnection = async () => {
     console.log('🔍 Testing MongoDB connection...');
     console.log('📝 Connection string:', process.env.MONGO_URI?.replace(/:[^:@]+@/, ':****@'));
     
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000,
+  connectTimeoutMS: 30000
+});
     
     console.log('✅ MongoDB Connected Successfully!');
     console.log('📊 Database:', mongoose.connection.db.databaseName);

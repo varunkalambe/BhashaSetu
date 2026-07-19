@@ -30,10 +30,14 @@ connectDB();
 const app = express();
 
 // ============================================
-// 🔧 CONFIGURATION FOR HUGGING FACE SPACES
+// 🔧 LOCAL DEVELOPMENT CONFIGURATION (Windows)
 // ============================================
+// NOTE: Deployment (HF Spaces/Docker) config is commented out below.
+// This block now runs entirely against local, relative paths so it
+// works unmodified on a Windows machine with no container involved.
 
-// Enable CORS for all origins (important for HF Spaces)
+// Enable CORS. Kept permissive since the frontend is served by this
+// same Express app (same-origin) in local dev — safe to leave as-is.
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST", "HEAD", "OPTIONS", "PUT", "DELETE"],
@@ -47,21 +51,29 @@ app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // ============================================
-// 📁 DIRECTORY SETUP
+// 📁 DIRECTORY SETUP (LOCAL WINDOWS PATHS)
 // ============================================
-// Ensure all upload directories exist (using absolute paths for Docker)
+// const uploadDirs = [   // ❌ OLD Docker/HF Spaces absolute paths — do not use locally
+//     '/app/uploads',
+//     '/app/uploads/originals',
+//     ...
+// ];
+
+// ✅ NEW: paths resolved relative to this file's location, so they land
+// inside <project-root>/uploads/... on Windows, macOS, or Linux alike —
+// same pattern middleware/multer.js already uses.
 const uploadDirs = [
-    '/app/uploads',
-    '/app/uploads/originals',
-    '/app/uploads/audio',
-    '/app/uploads/transcription',
-    '/app/uploads/translations',
-    '/app/uploads/translated_audio',
-    '/app/uploads/captions',
-    '/app/uploads/transcripts',
-    '/app/uploads/processed',
-    '/app/uploads/final',
-    '/app/uploads/temp'
+    path.join(__dirname, '..', 'uploads'),
+    path.join(__dirname, '..', 'uploads', 'originals'),
+    path.join(__dirname, '..', 'uploads', 'audio'),
+    path.join(__dirname, '..', 'uploads', 'transcription'),
+    path.join(__dirname, '..', 'uploads', 'translations'),
+    path.join(__dirname, '..', 'uploads', 'translated_audio'),
+    path.join(__dirname, '..', 'uploads', 'captions'),
+    path.join(__dirname, '..', 'uploads', 'transcripts'),
+    path.join(__dirname, '..', 'uploads', 'processed'),
+    path.join(__dirname, '..', 'uploads', 'final'),
+    path.join(__dirname, '..', 'uploads', 'temp')
 ];
 
 uploadDirs.forEach(dir => {
@@ -71,8 +83,12 @@ uploadDirs.forEach(dir => {
     }
 });
 
-// Fonts directory already created by Dockerfile at /app/backend/fonts
-console.log(`✅ Fonts directory: /app/backend/fonts`);
+// const fontsDir = '/app/backend/fonts'; // ❌ OLD: Dockerfile-provisioned path
+const fontsDir = path.join(__dirname, 'fonts'); // ✅ NEW: local relative path
+if (!fs.existsSync(fontsDir)) {
+    fs.mkdirSync(fontsDir, { recursive: true });
+}
+console.log(`✅ Fonts directory: ${fontsDir}`);
 
 
 // ============================================
@@ -206,9 +222,9 @@ app.get("/", (req, res) => {
         // Fallback to API info if Home.html doesn't exist
         res.json({
             success: true,
-            message: "Video Translation API Server - Hugging Face Spaces",
+            message: "Video Translation API Server - Local Development",
             version: "1.0.0",
-            deployment: "Hugging Face Spaces",
+            deployment: "Local (Windows, no Docker)",
             endpoints: {
                 upload: "/api/upload",
                 process: "/api/process", 
@@ -243,7 +259,7 @@ app.get("/api", (req, res) => {
         success: true,
         api: "Video Translation Processing API",
         version: "1.0.0",
-        deployment: "Hugging Face Spaces Compatible",
+        deployment: "Local (Windows, no Docker)",
         routes: {
             "POST /api/upload": "Upload video file for processing",
             "GET /api/process/status/:jobId": "Get processing status",
@@ -359,7 +375,7 @@ app.get('/health', async (req, res) => {
             timestamp: new Date(),
             environment: process.env.NODE_ENV || 'production',
             version: '1.0.0',
-            deployment: 'Hugging Face Spaces',
+            deployment: 'Local (Windows, no Docker)',
             memory: {
                 used: `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`,
                 total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)} MB`,
@@ -514,7 +530,39 @@ const gracefulShutdown = (signal) => {
 // ============================================
 const PORT = process.env.PORT || 7860;  // ✅ CRITICAL: Port 7860 for HF Spaces
 
+// ✅ On every boot (including nodemon restarts), scan for jobs whose log says
+// "processing" but which this fresh process obviously never started. This is
+// exactly the failure mode that made jobs look "stuck forever" — surface it
+// loudly and immediately instead of leaving it to a silent status file.
+const scanForOrphanedJobs = () => {
+  try {
+    const logsDir = './uploads/logs';
+    if (!fs.existsSync(logsDir)) return;
+
+    const orphans = fs.readdirSync(logsDir)
+      .filter(f => f.endsWith('_processing.json'))
+      .map(f => {
+        try {
+          const log = JSON.parse(fs.readFileSync(path.join(logsDir, f), 'utf8'));
+          return log.status === 'processing' ? log : null;
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    if (orphans.length > 0) {
+      console.log(`\n⚠️  ${orphans.length} job(s) were left in "processing" state from before this server start — likely killed by a restart (nodemon/crash) mid-pipeline:`);
+      orphans.forEach(o => console.log(`   - Job ${o.jobId}: stuck at step "${o.step}", last updated ${o.last_updated || 'unknown'}`));
+      console.log(`   These will now correctly report status "stalled" via /api/process/status/:jobId instead of hanging forever.\n`);
+    }
+  } catch (err) {
+    console.warn('⚠️ Orphaned job scan failed:', err.message);
+  }
+};
+
 const server = app.listen(PORT, '0.0.0.0', () => {  // ✅ Listen on all interfaces
+    scanForOrphanedJobs();
     console.log(`\n${'🎉'.repeat(50)}`);
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`✅ Backend API + Frontend serving enabled`);
@@ -553,7 +601,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {  // ✅ Listen on all interfa
     });
     
     console.log(`\n⚡ Ready for video processing requests!`);
-    console.log(`🌍 Deployment: Hugging Face Spaces Compatible\n`);
+    console.log(`🌍 Deployment: Local Windows, no Docker/Cloud\n`);
 });
 
 // Handle graceful shutdown

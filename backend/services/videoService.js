@@ -51,7 +51,86 @@ ffmpeg.setFfmpegPath(ffmpegStatic);
 // In videoService.js
 // Replace your entire existing 'assembleVideoWithCaptions' function with this complete version.
 
-export const assembleVideoWithCaptions = async (jobId, alignmentData, translation, lipSyncData = null) => {
+// ===== NEW: AUTO-DISCOVER THE DEMUCS BGM STEM WHEN NOT EXPLICITLY PASSED IN =====
+// Needed for resumed/retried jobs where assembleVideoWithCaptions might be called
+// without going through the main processVideo() pipeline call site.
+const discoverBgmPath = (jobId) => {
+  try {
+    const resultJsonPath = path.join(process.cwd(), 'uploads', 'separated', jobId, 'result.json');
+    if (fs.existsSync(resultJsonPath)) {
+      const result = JSON.parse(fs.readFileSync(resultJsonPath, 'utf-8'));
+      if (result.bgm_path && fs.existsSync(result.bgm_path)) {
+        return result.bgm_path;
+      }
+    }
+  } catch (err) {
+    console.warn(`[${jobId}] Could not auto-discover BGM stem: ${err.message}`);
+  }
+  return null;
+};
+
+// ===== NEW: MIX PRESERVED BACKGROUND MUSIC (DEMUCS) BACK INTO THE TRANSLATED AUDIO =====
+// Closes a real gap: Demucs already separates vocals/BGM in audioService.js and stores
+// `bgm_path`, but nothing downstream ever read it — the final video always shipped with
+// the BGM silently dropped, replaced entirely by the flat translated-vocals track.
+// This mixes the already time-corrected translated vocal track with the ORIGINAL
+// background-music stem, ducked under the voice, so music/ambience survives translation.
+// Best-effort: any failure here falls back to vocals-only (today's existing behavior),
+// same non-blocking pattern used everywhere else in this pipeline.
+const mixBackgroundMusicWithVocals = async (vocalsPath, bgmPath, jobId) => {
+  if (!bgmPath || !fs.existsSync(bgmPath)) {
+    console.log(`[${jobId}] ℹ️ No BGM stem available, using translated vocals only`);
+    return vocalsPath;
+  }
+
+  const outputDir = './uploads/temp_audio';
+  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  const mixedPath = path.join(outputDir, `${jobId}_vocals_plus_bgm.wav`);
+
+  // BGM ducked to 35% by default so the dubbed voice stays intelligible on top of it.
+  // Override via BGM_DUCK_VOLUME env var (0.0-1.0) if a project needs it louder/quieter.
+  const bgmDuckLevel = process.env.BGM_DUCK_VOLUME || '0.35';
+  // AFTER
+const args = [
+    '-i', path.resolve(vocalsPath),
+    '-i', path.resolve(bgmPath),
+    '-filter_complex',
+    // ✅ FIX: amix's default normalize=1 silently divides EVERY input
+    // (including the vocals!) by the input count — here that's an
+    // unintended -6dB hit on top of the BGM already being ducked to 35%
+    // before mixing. This is what was destroying the carefully-matched
+    // reference loudness from the voice-cloning step (measured: final
+    // output landed ~9 LU quieter than intended). normalize=0 keeps our
+    // explicit gain staging intact; alimiter guards against clipping
+    // without re-touching overall loudness the way another loudnorm pass
+    // would.
+    `[1:a]volume=${bgmDuckLevel}[bgm];[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=2:normalize=0[premix];[premix]alimiter=limit=0.97:attack=5:release=50[aout]`,
+    '-map', '[aout]',
+    '-ar', '44100',
+    '-y', path.resolve(mixedPath)
+  ];
+
+  return new Promise((resolve) => {
+    const proc = spawn(ffmpegStatic, args);
+    let stderr = '';
+    proc.stderr.on('data', (d) => { stderr += d.toString(); });
+    proc.on('close', (code) => {
+      if (code === 0 && fs.existsSync(mixedPath) && fs.statSync(mixedPath).size > 1000) {
+        console.log(`[${jobId}] ✅ BGM mixed back into translated audio: ${mixedPath}`);
+        resolve(mixedPath);
+      } else {
+        console.warn(`[${jobId}] ⚠️ BGM mixing failed (code ${code}), continuing with vocals-only: ${stderr.substring(0, 300)}`);
+        resolve(vocalsPath);
+      }
+    });
+    proc.on('error', (err) => {
+      console.warn(`[${jobId}] ⚠️ BGM mixing process error, continuing with vocals-only: ${err.message}`);
+      resolve(vocalsPath);
+    });
+  });
+};
+
+export const assembleVideoWithCaptions = async (jobId, alignmentData, translation, lipSyncData = null, bgmAudioPath = null) => {
 
   console.log(`🐛 [${jobId}] DEBUG (assembleVideo): Function started. Translation object received:`, !!translation);
 
@@ -63,6 +142,11 @@ export const assembleVideoWithCaptions = async (jobId, alignmentData, translatio
         throw new Error('A valid translation object was not provided to assembleVideoWithCaptions.');
       }
 
+      // ✅ FIX: this function never had its own targetLanguage — the caption call
+      // further down was referencing an undeclared variable (ReferenceError:
+      // "targetLanguage is not defined"). The target language is always available
+      // on the translation object itself (set in translationService.js).
+      const targetLanguage = translation.language || translation.targetLang || 'hi';
 
       console.log(`[${jobId}] Starting enhanced video assembly with frame-level audio-video alignment and real-time sync...`);
 
@@ -103,7 +187,13 @@ export const assembleVideoWithCaptions = async (jobId, alignmentData, translatio
       console.log(`[${jobId}] Step 1/8: Comprehensive lip sync analysis...`);
       let lipSyncReference = lipSyncData;
       if (!lipSyncReference) {
-        // ... (Your existing lip sync analysis logic is fine here)
+        try {
+          lipSyncReference = await analyzeLipMovements(originalVideoPath, jobId);
+          console.log(`[${jobId}] ✅ MediaPipe lip movement analysis complete`);
+        } catch (lipAnalysisError) {
+          console.warn(`[${jobId}] ⚠️ Lip movement analysis failed, continuing without it: ${lipAnalysisError.message}`);
+          lipSyncReference = null;
+        }
       }
 
       // ===== STEP 2: VALIDATE PRE-GENERATED WORD ALIGNMENT (FINAL FIX) =====
@@ -169,13 +259,23 @@ console.log(`[${jobId}] ℹ️ Lip sync validation result:`, lipSyncValidation);
 console.log(`[${jobId}] Step 6.5/8: Generating accurate captions...`);
 let accurateCaptionPath = null;
 try {
-    accurateCaptionPath = await generateAccurateCaptions(
-        alignmentData.forced_alignment_result, // translatedWordAlignment
-        translation,                            // translatedText
-        jobId,
-        translation.language
-    );
+  // ✅ FIXED: use the real existing helper (getAudioDurationForDrift, defined later in
+  // this file) and the real field name (filePaths.translatedAudio), and guard against
+  // it rejecting so a duration-probe failure can't break caption generation.
+  let knownAudioDuration = null;
+  try {
+    knownAudioDuration = await getAudioDurationForDrift(filePaths.translatedAudio);
+  } catch (durationProbeError) {
+    console.warn(`[${jobId}] ⚠️ Could not probe translated audio duration for caption fallback: ${durationProbeError.message}`);
+  }
 
+  accurateCaptionPath = await generateAccurateCaptions(
+      alignmentData.forced_alignment_result,
+      translation,
+      jobId,
+      targetLanguage,
+      knownAudioDuration
+  );
     console.log(`[${jobId}] ✅ Caption generation successful. Path: '${accurateCaptionPath}'`);
 
 } catch (captionError) {
@@ -183,40 +283,44 @@ try {
     accurateCaptionPath = null;
 }
 
+// ===== STEP 6.7/8: MIX PRESERVED BACKGROUND MUSIC BACK INTO THE FINAL AUDIO =====
+console.log(`[${jobId}] Step 6.7/8: Mixing preserved background music into translated audio...`);
+const resolvedBgmPath = bgmAudioPath || discoverBgmPath(jobId);
+const finalAudioForMux = await mixBackgroundMusicWithVocals(realTimeSyncedAudioPath, resolvedBgmPath, jobId);
 
 
 
-      // ===== STEP 7: FRAME-PERFECT VIDEO ASSEMBLY WITH FIXED SUBTITLE EMBEDDING =====
-      console.log(`[${jobId}] Step 7/8: Frame-perfect video assembly with embedded sync data...`);
+
+      // ===== STEP 7+8: FRAME-PERFECT ASSEMBLY WITH DRIFT-CORRECTION RETRY LOOP =====
+      console.log(`[${jobId}] Step 7-8/8: Frame-perfect assembly with drift-check retry...`);
       const hasCaptions = accurateCaptionPath && fs.existsSync(accurateCaptionPath);
-      const assemblyResults = await performFramePerfectVideoAssemblyFixed(
+      const {
+        assemblyResults,
+        finalValidation,
+        finalAudioPathUsed,
+        attempts
+      } = await assembleWithDriftRetry(
         originalVideoPath,
-        realTimeSyncedAudioPath, // ✅ FIX: Use the correct audio path variable
-        accurateCaptionPath || null, // Pass null if captions not available
-        outputVideoPath,
+        finalAudioForMux, // ✅ Vocals + preserved BGM when available, vocals-only otherwise
+        accurateCaptionPath || null,
+        outputVideoPath,
         frameLevelValidation,
         neuralSyncResult,
         lipSyncValidation,
         jobId,
         translation.language
       );
-      console.log(`[${jobId}] ✅ Frame-perfect assembly completed successfully`);
-
-      // ===== STEP 8: COMPREHENSIVE FINAL VALIDATION =====
-      console.log(`[${jobId}] Step 8/8: Comprehensive final validation...`);
-      const finalValidation = await performComprehensiveFinalValidation(
-        outputVideoPath,
-        originalVideoPath,
-        realTimeSyncedAudioPath, // ✅ FIX: Use the correct audio path variable
-        lipSyncValidation,
-        jobId
-      );
+      console.log(`[${jobId}] ✅ Assembly completed after ${attempts} attempt(s), final drift=${((finalValidation.durationAccuracy ?? 0) * 1000).toFixed(1)}ms`);
 
       // ===== CLEANUP ADVANCED TEMPORARY FILES =====
-      await cleanupAdvancedTemporaryFiles([
-        realTimeSyncedAudioPath,
-        // neuralCorrectedAudioPath // ✅ FIX: This variable is not defined, so it's removed
-      ], translatedAudioPath, jobId);
+      const tempFilesToClean = [realTimeSyncedAudioPath];
+      if (finalAudioForMux !== realTimeSyncedAudioPath) {
+        tempFilesToClean.push(finalAudioForMux); // the BGM-mixed temp file, if one was created
+      }
+      if (finalAudioPathUsed !== finalAudioForMux) {
+        tempFilesToClean.push(finalAudioPathUsed); // drift-corrected temp file, if one was created
+      }
+      await cleanupAdvancedTemporaryFiles(tempFilesToClean, translatedAudioPath, jobId);
 
       // ===== RETURN COMPREHENSIVE RESULTS =====
       const comprehensiveResults = {
@@ -230,6 +334,7 @@ try {
         neuralSync: neuralSyncResult,  // ✅ CORRECT VARIABLE
         wordLevelAlignment: wordLevelAlignment,
         frameLevelStats: frameLevelValidation,
+        bgmPreserved: finalAudioForMux !== realTimeSyncedAudioPath,
         processingStats: {
           ...(assemblyResults?.stats || {}),
           totalProcessingTime: Date.now() - (assemblyResults?.stats?.startTime || Date.now()),
@@ -240,7 +345,8 @@ try {
             'neural_validation',
             'lip_sync_analysis',
             'phoneme_alignment',
-            'subtitle_embedding'
+            'subtitle_embedding',
+            ...(finalAudioForMux !== realTimeSyncedAudioPath ? ['bgm_remix'] : [])
           ]
         }
       };
@@ -559,7 +665,13 @@ const performFrameLevelDurationValidation = async (videoPath, audioPath, lipSync
       adjustmentStrategy = 'lip_sync_guided';
     }
 
-    if (wordLevelAlignment && wordLevelAlignment.lip_sync_enabled) {
+    // ✅ FIX: only route to phoneme-guided adjustment when phoneme_timings
+    // actually exists AND the gap isn't already a major/moderate correction.
+    // The old check (`lip_sync_enabled`) doesn't gate on the data this branch
+    // needs, so it was firing even on a 2.6s-short clip, forcing a strategy
+    // that always throws downstream and silently skips correction entirely.
+    const hasPhonemeTimings = wordLevelAlignment?.phoneme_timings?.length > 0;
+    if (hasPhonemeTimings && adjustmentStrategy !== 'major_correction' && adjustmentStrategy !== 'moderate_correction') {
       if (syncQuality === 'good') syncQuality = 'very_good';
       adjustmentStrategy = 'phoneme_guided';
     }
@@ -624,7 +736,12 @@ const performRealTimeSyncAdjustment = async (audioPath, videoPath, frameLevelVal
     // Choose adjustment method based on available data and strategy
     switch (strategy) {
       case 'phoneme_guided':
-        if (wordLevelAlignment) {
+        // ✅ FIX: wordLevelAlignment is always truthy in the live pipeline
+        // (it's the forced_alignment_result.segments object), so this branch
+        // used to always run, always throw ("No phoneme timings available"),
+        // and get swallowed by the outer catch — meaning NO correction of any
+        // kind was applied and the short TTS clip shipped straight to assembly.
+        if (wordLevelAlignment?.phoneme_timings?.length > 0) {
           await applyPhonemeGuidedAdjustment(
             audioPath,
             adjustedAudioPath,
@@ -773,33 +890,21 @@ const applyLipSyncGuidedAdjustment = async (inputPath, outputPath, targetDuratio
 const applyFramePerfectAdjustment = async (inputPath, outputPath, targetDuration, currentDuration, frameLevelValidation, jobId) => {
   console.log(`[${jobId}] Applying frame-perfect adjustment...`);
 
-  const adjustmentRatio = currentDuration / targetDuration;
+  const adjustmentRatio = currentDuration / targetDuration; // >1 = audio too long, <1 = audio too short
   const frameAccuracy = frameLevelValidation.frameAccuracy;
-  const fps = frameLevelValidation.fps;
 
-  // Choose adjustment method based on frame accuracy
-  let command;
+  // ✅ FIX: the old sub-frame branch used `-t` hard-trim (chops words off the
+  // end) or `apad` (dead air) — this exact anti-pattern produced the 2.6s
+  // silent tail measured in the Gujarati output (5.4s of real speech vs an 8s
+  // target). The other two branches used atempo, a phase-vocoder that smears
+  // transients near its 0.5–2.0 range edges. rubberband's tempo filter
+  // preserves speech content and formants across the full ratio range, so
+  // it now handles every case here — same filter already used in
+  // ttsService.js's applyDurationAdjustment, for consistency pipeline-wide.
+  const clampedRatio = Math.max(0.5, Math.min(2.0, adjustmentRatio));
+  const command = `ffmpeg -i "${inputPath}" -filter:a "rubberband=tempo=${clampedRatio.toFixed(6)},afade=in:st=0:d=0.01,afade=out:st=${Math.max(0, targetDuration - 0.01)}:d=0.01" -t ${targetDuration.toFixed(3)} -y "${outputPath}"`;
 
-  if (frameAccuracy < 0.1) {
-    // Sub-frame accuracy needed - use precise padding/trimming
-    if (currentDuration > targetDuration) {
-      const trimAmount = currentDuration - targetDuration;
-      command = `ffmpeg -i "${inputPath}" -ss 0 -t ${targetDuration} -af "afade=out:st=${targetDuration - 0.001}:d=0.001" -y "${outputPath}"`;
-    } else {
-      const padAmount = targetDuration - currentDuration;
-      command = `ffmpeg -i "${inputPath}" -af "apad=pad_dur=${padAmount},afade=in:st=0:d=0.001" -y "${outputPath}"`;
-    }
-  } else if (frameAccuracy < 1) {
-    // Frame-level accuracy - use micro tempo adjustment
-    const microTempo = Math.max(0.99, Math.min(1.01, adjustmentRatio));
-    command = `ffmpeg -i "${inputPath}" -af "atempo=${microTempo.toFixed(6)},afade=in:st=0:d=0.01,afade=out:st=${targetDuration - 0.01}:d=0.01" -y "${outputPath}"`;
-  } else {
-    // Standard tempo adjustment with quality preservation
-    const clampedRatio = Math.max(0.5, Math.min(2.0, adjustmentRatio));
-    command = `ffmpeg -i "${inputPath}" -af "atempo=${clampedRatio.toFixed(4)},afade=in:st=0:d=0.01,afade=out:st=${targetDuration - 0.01}:d=0.01" -y "${outputPath}"`;
-  }
-
-  console.log(`[${jobId}] Frame-perfect adjustment: ${frameAccuracy.toFixed(4)} frame accuracy, ratio: ${adjustmentRatio.toFixed(6)}`);
+  console.log(`[${jobId}] Frame-perfect adjustment (rubberband time-stretch): ${frameAccuracy.toFixed(4)} frame accuracy, tempo ratio: ${clampedRatio.toFixed(6)}`);
 
   return execAsync(command);
 };
@@ -1306,7 +1411,91 @@ ffmpegProcess.on('error', (err) => {
 
 
 
-// ===== COMPREHENSIVE FINAL VALIDATION =====
+// ===== NEW: RETRY WRAPPER WITH DRIFT-CORRECTION LOOP =====
+const DRIFT_RETRY_THRESHOLD_SECONDS = parseFloat(process.env.DRIFT_RETRY_THRESHOLD_SECONDS || '0.5');
+const DRIFT_MAX_RETRIES = parseInt(process.env.DRIFT_MAX_RETRIES || '2', 10);
+
+const assembleWithDriftRetry = async (
+  originalVideoPath,
+  audioPath,
+  captionPath,
+  outputVideoPath,
+  frameLevelValidation,
+  neuralSyncResult,
+  lipSyncValidation,
+  jobId,
+  targetLanguage
+) => {
+  let currentAudioPath = audioPath;
+  let attempt = 0;
+  let assemblyResults, finalValidation;
+
+  while (true) {
+    attempt++;
+    console.log(`[${jobId}] 🎬 Video assembly attempt ${attempt}/${DRIFT_MAX_RETRIES + 1}...`);
+
+    assemblyResults = await performFramePerfectVideoAssemblyFixed(
+      originalVideoPath, currentAudioPath, captionPath, outputVideoPath,
+      frameLevelValidation, neuralSyncResult, lipSyncValidation, jobId, targetLanguage
+    );
+
+    finalValidation = await performComprehensiveFinalValidation(
+      outputVideoPath, originalVideoPath, currentAudioPath, lipSyncValidation, jobId
+    );
+
+    const driftSeconds = finalValidation.durationAccuracy ?? 999;
+    console.log(`[${jobId}] 📏 Drift check (attempt ${attempt}): ${(driftSeconds * 1000).toFixed(1)}ms (threshold=${DRIFT_RETRY_THRESHOLD_SECONDS * 1000}ms)`);
+
+    if (driftSeconds <= DRIFT_RETRY_THRESHOLD_SECONDS) {
+      console.log(`[${jobId}] ✅ Drift within tolerance, accepting output`);
+      break;
+    }
+
+    if (attempt > DRIFT_MAX_RETRIES) {
+      console.warn(`[${jobId}] ⚠️ Drift still ${(driftSeconds * 1000).toFixed(1)}ms after ${DRIFT_MAX_RETRIES} retries — accepting best-effort output rather than failing the job`);
+      break;
+    }
+
+    try {
+      const originalDuration = await getAudioDurationForDrift(originalVideoPath);
+      const currentAudioDuration = await getAudioDurationForDrift(currentAudioPath);
+      const speedRatio = currentAudioDuration / originalDuration;
+      const clampedRatio = Math.max(0.85, Math.min(1.15, speedRatio));
+
+      const correctedPath = currentAudioPath.replace(/\.(wav|m4a)$/, `_drift_fix_${attempt}.$1`);
+      console.log(`[${jobId}] 🔧 Applying corrective atempo=${clampedRatio.toFixed(4)} for retry ${attempt + 1}...`);
+
+      await new Promise((resolve, reject) => {
+        exec(
+          `ffmpeg -y -i "${currentAudioPath}" -filter:a "atempo=${clampedRatio}" "${correctedPath}"`,
+          { timeout: 60000 },
+          (error) => error ? reject(error) : resolve()
+        );
+      });
+
+      if (fs.existsSync(correctedPath)) {
+        currentAudioPath = correctedPath;
+      } else {
+        console.warn(`[${jobId}] ⚠️ Drift correction file not created, retrying with same audio (may not improve)`);
+      }
+    } catch (correctionError) {
+      console.warn(`[${jobId}] ⚠️ Drift correction attempt failed: ${correctionError.message}, retrying with unmodified audio`);
+    }
+  }
+
+  return { assemblyResults, finalValidation, finalAudioPathUsed: currentAudioPath, attempts: attempt };
+};
+
+const getAudioDurationForDrift = (mediaPath) => {
+  return new Promise((resolve, reject) => {
+    exec(`ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${mediaPath}"`, { timeout: 15000 }, (error, stdout) => {
+      if (error) return reject(error);
+      const d = parseFloat(stdout.trim());
+      isNaN(d) || d <= 0 ? reject(new Error(`Invalid duration: ${stdout.trim()}`)) : resolve(d);
+    });
+  });
+};
+
 const performComprehensiveFinalValidation = async (outputPath, originalVideoPath, audioPath, lipSyncValidation, jobId) => {
   console.log(`[${jobId}] Performing comprehensive final validation...`);
 

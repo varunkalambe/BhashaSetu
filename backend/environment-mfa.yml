@@ -1,0 +1,19 @@
+name: bhashasetu-mfa
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - -r requirements.txt
+# NOTE: montreal-forced-aligner is intentionally NOT listed here.
+# MFA lives in its own separate, isolated env ("bhashasetu-mfa-tool")
+# created via:
+#   conda create -n bhashasetu-mfa-tool -c conda-forge montreal-forced-aligner python=3.10 -y
+# Reason: MFA's conda dependency tree (hdbscan -> scikit-learn -> scipy)
+# pulls in numpy/scipy/scikit-learn builds that are binary-incompatible
+# with the exact-pinned numpy==1.26.4/scipy==1.13.0 this env's pip stack
+# (torch, transformers, IndicTransToolkit) requires. Installing MFA
+# directly into this env WILL corrupt it (confirmed twice in practice).
+# MFA_PYTHON_PATH in .env must point at bhashasetu-mfa-tool's mfa.exe,
+# never at anything inside this env.

@@ -18,6 +18,7 @@ import {
 import {
   calculateSpeechDuration
 } from './durationAwareTranslation.js';
+import { separateVocals } from './enhancedPipelineService.js';
 
 ffmpeg.setFfmpegPath(ffmpegStatic);
 
@@ -91,11 +92,22 @@ const processAudioExtraction = async (video, jobId, resolve, reject) => {
     throw new Error(`Input video file not found: ${inputVideoPath}`);
   }
 
-  const videoInfo = await getVideoMetadata(inputVideoPath, jobId);
+const stageStart = Date.now();
+  const heartbeat = setInterval(() => {
+    console.log(`[${jobId}] ⏳ Audio extraction still running... (${Math.round((Date.now() - stageStart) / 1000)}s elapsed)`);
+  }, 10000);
+
+  let videoInfo;
+  try {
+    videoInfo = await getVideoMetadata(inputVideoPath, jobId);
+  } finally {
+    // heartbeat continues past this point intentionally — cleared at the very
+    // end of processAudioExtraction (see below), so it covers the whole stage,
+    // not just ffprobe.
+  }
   console.log(`[${jobId}] Video metadata: ${videoInfo.duration.toFixed(2)}s, ${videoInfo.video.width}x${videoInfo.video.height}`);
 
   console.log(`[${jobId}] Step 1/3: Extracting high quality audio for forced alignment...`);
-
   const highQualityExtractionPromise = new Promise((hqResolve, hqReject) => {
     ffmpeg(inputVideoPath)
       .noVideo()
@@ -164,7 +176,7 @@ const processAudioExtraction = async (video, jobId, resolve, reject) => {
           highQualityPath = outputAudioPath;
         }
 
-        console.log(`[${jobId}] Step 3/3: Preserving timing metadata and preparing for alignment...`);
+        console.log(`[${jobId}] Step 3/4: Preserving timing metadata and preparing for alignment...`);
 
         const timingMetadata = {
           original_video_path: inputVideoPath,
@@ -183,6 +195,14 @@ const processAudioExtraction = async (video, jobId, resolve, reject) => {
           high_quality_channels: 2
         };
 
+        console.log(`[${jobId}] Step 4/4: Separating vocals from background music (Demucs)... (this can take a while on CPU — heartbeat every 10s below)`);
+        const separation = await separateVocals(outputAudioPath, jobId);
+        clearInterval(heartbeat);
+        console.log(`[${jobId}] ⏱️ Audio extraction stage total time: ${Math.round((Date.now() - stageStart) / 1000)}s`);
+        timingMetadata.vocals_path = separation.vocalsPath;
+        timingMetadata.bgm_path = separation.bgmPath;
+        timingMetadata.bgm_preserved = !!separation.bgmPath;
+
         // Safe database update - continue processing even if database fails
         await safeDatabaseOperation(
           () => Upload.findByIdAndUpdate(jobId, {
@@ -194,7 +214,10 @@ const processAudioExtraction = async (video, jobId, resolve, reject) => {
             video_duration: videoInfo.duration,
             duration_preserved_extraction: durationMatch,
             extraction_service: 'enhanced-audio-extraction-with-timing',
-            ready_for_forced_alignment: true
+            ready_for_forced_alignment: true,
+            vocals_path: timingMetadata.vocals_path,
+            bgm_path: timingMetadata.bgm_path,
+            bgm_preserved: timingMetadata.bgm_preserved
           }),
           jobId,
           'audio extraction update'
@@ -219,6 +242,7 @@ const processAudioExtraction = async (video, jobId, resolve, reject) => {
     })
 
     .on('error', (error) => {
+      clearInterval(heartbeat);
       console.error(`[${jobId}] ❌ FFmpeg audio extraction failed:`, error.message);
 
       if (error.message.includes('No such file')) {
@@ -253,24 +277,65 @@ export const alignTranslatedAudio = async (audioPath, jobId, language) => {
     throw new Error(`Translated audio file not found for alignment: ${audioPath}`);
   }
 
-  try {
-    // This assumes you are using a local Whisper model that provides word timings.
-    // The logic should be very similar to your initial transcription service.
-    const alignmentResult = await transcribeWithLocalWhisper(audioPath, language, true); // 'true' for word_timestamps
+  // ✅ FIX: previously, if transcribeWithLocalWhisper THREW (e.g. the broken
+  // numpy/torch DLL in the bhashasetu-mfa conda env — "Numpy is not available"),
+  // the whole job was aborted with "Failed to perform alignment on translated
+  // audio". Word-level alignment here is a NICE-TO-HAVE for caption/lip-sync
+  // precision, not a hard requirement to produce a final video — every other
+  // step in this pipeline (transcribeAudio, forcedAlignMFA→here) already
+  // degrades gracefully. This step now does too: a broken whisper env
+  // degrades to duration-based fallback timing instead of failing the job.
+  let alignmentResult = null;
+  let whisperFailed = false;
+  let whisperError = null;
 
-    if (!alignmentResult || !alignmentResult.segments) {
-      throw new Error('Alignment of translated audio failed to return valid segments.');
+  try {
+    alignmentResult = await transcribeWithLocalWhisper(audioPath, language);
+  } catch (error) {
+    whisperFailed = true;
+    whisperError = error;
+    console.error(`[${jobId}] ❌ Local Whisper alignment threw (environment issue, not a pipeline-fatal error): ${error.message}`);
+  }
+
+  if (whisperFailed || !alignmentResult || !alignmentResult.segments || alignmentResult.segments.length === 0) {
+    console.warn(`[${jobId}] ⚠️ ${whisperFailed ? 'Whisper failed to run' : 'Whisper returned no segments'} for translated audio — generating fallback word timing.`);
+
+    const duration = await getAudioDuration(audioPath);
+    const fallbackText = (alignmentResult && alignmentResult.text) ? alignmentResult.text.trim() : '';
+    const words = fallbackText ? fallbackText.split(/\s+/) : [];
+
+    let fallbackSegments;
+    if (words.length > 0 && duration > 0) {
+      const wordDuration = duration / words.length;
+      fallbackSegments = [{
+        start: 0,
+        end: duration,
+        text: fallbackText,
+        words: words.map((word, index) => ({
+          word,
+          start: index * wordDuration,
+          end: (index + 1) * wordDuration,
+          probability: 0.5
+        }))
+      }];
+    } else {
+      fallbackSegments = [{ start: 0, end: duration || 1, text: fallbackText, words: [] }];
     }
 
-    console.log(`[${jobId}] ✅ Alignment of translated audio successful.`);
+    console.log(`[${jobId}] ✅ Fallback alignment generated: ${fallbackSegments[0].words.length} words over ${duration}s.`);
+
     return {
-      forced_alignment_result: alignmentResult,
-      alignment_quality: 'excellent', // Assume excellent as it's from clean TTS
+      forced_alignment_result: { ...(alignmentResult || {}), segments: fallbackSegments },
+      alignment_quality: 'fallback',
+      whisper_error: whisperFailed ? whisperError.message : null,
     };
-  } catch (error) {
-    console.error(`[${jobId}] ❌ Alignment of translated audio failed:`, error);
-    throw new Error(`Failed to perform alignment on translated audio for job ${jobId}.`);
   }
+
+  console.log(`[${jobId}] ✅ Alignment of translated audio successful.`);
+  return {
+    forced_alignment_result: alignmentResult,
+    alignment_quality: 'excellent',
+  };
 };
 
 
@@ -569,13 +634,25 @@ export const replaceAudioInVideo = async (jobId) => {
   }
 };
 
+// Replace correctAudioDurationWithTimingMetadata() in audioService.js
+// (and apply the same pattern in videoService.js once you upload it —
+// this is the function signature to search for there too)
+
+const buildAtempoChain = (ratio) => {
+  // atempo only accepts 0.5–2.0 per instance; chain multiple stages for extreme ratios
+  const stages = [];
+  let remaining = ratio;
+  while (remaining > 2.0) { stages.push(2.0); remaining /= 2.0; }
+  while (remaining < 0.5) { stages.push(0.5); remaining /= 0.5; }
+  stages.push(remaining);
+  return stages.map(r => `atempo=${r.toFixed(6)}`).join(',');
+};
 
 const correctAudioDurationWithTimingMetadata = async (audioPath, targetDuration, timingMetadata, jobId) => {
   try {
     const currentDuration = await getAudioDuration(audioPath);
     const difference = targetDuration - currentDuration;
 
-    // ✅ Use 500ms threshold as per instructions
     if (Math.abs(difference) < 0.5) {
       console.log(`[${jobId}] Duration difference ${difference.toFixed(2)}s acceptable, no correction needed`);
       return audioPath;
@@ -583,36 +660,32 @@ const correctAudioDurationWithTimingMetadata = async (audioPath, targetDuration,
 
     const correctedAudioPath = audioPath.replace(/\.(wav|mp3|m4a)$/, '_duration_corrected.$1');
 
-    let command;
-    if (difference > 0) {
-      // Add silence padding
-      command = `ffmpeg -i "${audioPath}" -af "apad=pad_dur=${difference}" -y "${correctedAudioPath}"`;
-    } else {
-      // Trim with re-encoding for accuracy
-      command = `ffmpeg -i "${audioPath}" -t ${targetDuration} -c:a aac -b:a 192k -y "${correctedAudioPath}"`;
-    }
+    // speedRatio > 1 => speed up (audio too long); < 1 => slow down (audio too short)
+    // Clamp to keep speech intelligible — beyond ~1.4x/0.7x it starts sounding unnatural
+    const rawRatio = currentDuration / targetDuration;
+    const speedRatio = Math.max(0.7, Math.min(1.4, rawRatio));
+    const atempoChain = buildAtempoChain(speedRatio);
 
-    console.log(`[${jobId}] Applying correction: ${difference > 0 ? 'padding' : 'trimming'} ${Math.abs(difference).toFixed(2)}s`);
+    const command = `ffmpeg -i "${audioPath}" -filter:a "${atempoChain}" -c:a aac -b:a 192k -y "${correctedAudioPath}"`;
+
+    console.log(`[${jobId}] Time-stretching audio by ${speedRatio.toFixed(3)}x (${currentDuration.toFixed(2)}s → target ${targetDuration.toFixed(2)}s) via: ${atempoChain}`);
 
     return new Promise((resolve, reject) => {
       exec(command, { timeout: 60000, maxBuffer: 50 * 1024 * 1024 }, (error, stdout, stderr) => {
         if (error) {
           console.error(`[${jobId}] Duration correction failed: ${error.message}`);
-          resolve(audioPath); // Fallback to original
+          resolve(audioPath);
           return;
         }
-
         if (!fs.existsSync(correctedAudioPath) || fs.statSync(correctedAudioPath).size < 1000) {
           console.error(`[${jobId}] Corrected file invalid`);
           resolve(audioPath);
           return;
         }
-
-        console.log(`[${jobId}] ✅ Duration correction successful`);
+        console.log(`[${jobId}] ✅ Duration corrected via time-stretch (speech preserved, no truncation/silence)`);
         resolve(correctedAudioPath);
       });
     });
-
   } catch (error) {
     console.error(`[${jobId}] Duration correction setup failed:`, error.message);
     return audioPath;

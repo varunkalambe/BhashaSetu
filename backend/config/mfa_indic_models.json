@@ -1,0 +1,90 @@
+{
+  "hi": {
+    "acoustic": "hi_indic_mfa",
+    "dictionary": "hi_indic_mfa"
+  },
+  "bn": {
+    "acoustic": "bn_indic_mfa",
+    "dictionary": "bn_indic_mfa"
+  },
+  "mr": {
+    "acoustic": "mr_indic_mfa",
+    "dictionary": "mr_indic_mfa"
+  },
+  "gu": {
+    "acoustic": "gu_indic_mfa",
+    "dictionary": "gu_indic_mfa"
+  },
+  "kn": {
+    "acoustic": "kn_indic_mfa",
+    "dictionary": "kn_indic_mfa"
+  },
+  "pa": {
+    "acoustic": "pa_indic_mfa",
+    "dictionary": "pa_indic_mfa"
+  },
+  "ta": {
+    "acoustic": "ta_indic_mfa",
+    "dictionary": "ta_indic_mfa"
+  },
+  "te": {
+    "acoustic": "te_indic_mfa",
+    "dictionary": "te_indic_mfa"
+  },
+  "ml": {
+    "acoustic": "ml_indic_mfa",
+    "dictionary": "ml_indic_mfa"
+  },
+  "ur": {
+    "acoustic": "ur_indic_mfa",
+    "dictionary": "ur_indic_mfa"
+  },
+  "or": {
+    "acoustic": "or_indic_mfa",
+    "dictionary": "or_indic_mfa"
+  },
+  "as": {
+    "acoustic": "as_indic_mfa",
+    "dictionary": "as_indic_mfa"
+  },
+  "sa": {
+    "acoustic": "sa_indic_mfa",
+    "dictionary": "sa_indic_mfa"
+  },
+  "ne": {
+    "acoustic": "ne_indic_mfa",
+    "dictionary": "ne_indic_mfa"
+  },
+  "sd": {
+    "acoustic": "sd_indic_mfa",
+    "dictionary": "sd_indic_mfa"
+  },
+  "sat": {
+    "acoustic": "sat_indic_mfa",
+    "dictionary": "sat_indic_mfa"
+  },
+  "mni": {
+    "acoustic": "mni_indic_mfa",
+    "dictionary": "mni_indic_mfa"
+  },
+  "mai": {
+    "acoustic": "mai_indic_mfa",
+    "dictionary": "mai_indic_mfa"
+  },
+  "gom": {
+    "acoustic": "gom_indic_mfa",
+    "dictionary": "gom_indic_mfa"
+  },
+  "ks": {
+    "acoustic": "ks_indic_mfa",
+    "dictionary": "ks_indic_mfa"
+  },
+  "doi": {
+    "acoustic": "doi_indic_mfa",
+    "dictionary": "doi_indic_mfa"
+  },
+  "brx": {
+    "acoustic": "brx_indic_mfa",
+    "dictionary": "brx_indic_mfa"
+  }
+}

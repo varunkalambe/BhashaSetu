@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+// AFTER
+import { translateWithIndicTrans2, translateMultipleWithIndicTrans2 } from './enhancedPipelineService.js';
 
 
 
@@ -233,11 +235,16 @@ const translateWithGoogleTranslate = async (text, sourceLang, targetLang, jobId)
 };
 
 
-// ===== MAIN TRANSLATION FUNCTION - WITH LIBRETRANSLATE RETRY LOGIC =====
+// ===== MAIN TRANSLATION FUNCTION - WITH REAL MULTI-ENGINE FALLBACK CHAIN =====
+// ✅ FIX: Every engine below is now actually reachable. Previously "PRIORITY 3" called
+// translateWithMyMemory a second time with its arguments in the wrong order (jobId was
+// being passed in as the text to translate), so Google Translate was never really invoked
+// as a fallback. translateWithOpenAI and translateWithGoogleTranslate were fully implemented
+// but dead (never called) - they are now wired into the real pipeline as genuine fallback
+// tiers instead of being unreachable dead code.
 export const translateText = async (text, sourceLang, targetLang, jobId = 'unknown') => {
   console.log(`[${jobId}] Starting translation: ${sourceLang} → ${targetLang}`);
 
-  // ADD THESE LINES:
   // Validate distinct languages
   if (sourceLang === targetLang) {
     console.log(`[${jobId}] Skipping translation: same language (${sourceLang})`);
@@ -251,8 +258,66 @@ export const translateText = async (text, sourceLang, targetLang, jobId = 'unkno
     };
   }
 
+  const attemptedEngines = [];
+
+  // ✅ NEW: Actually GATE on the COMET-Kiwi / LaBSE quality-estimation score instead of
+  // only logging it. Previously `qe_score` was computed and printed but never influenced
+  // whether the IndicTrans2 result was accepted — a badly-scored translation and a
+  // perfectly-scored one were treated identically. Threshold is deliberately soft: below
+  // it, we don't discard the result, we just give higher-priority engines a chance first
+  // and keep this one as a safety net (see the end of the function) so a low score never
+  // turns into a hard job failure when it's the only translation we managed to produce.
+  const MIN_QE_SCORE = parseFloat(process.env.INDICTRANS2_MIN_QE_SCORE || '0.5');
+  let bestFallbackCandidate = null;
+
+  // ===== PRIORITY 0: INDICTRANS2 (LOCAL, FREE, NO API KEY, HIGH QUALITY) =====
+  attemptedEngines.push('indictrans2');
+  try {
+    console.log(`[${jobId}] Attempting local IndicTrans2 translation...`);
+    const result = await translateWithIndicTrans2(text, sourceLang, targetLang, jobId);
+    if (result && result.text) {
+      if (!verifyProperScript(result.text, targetLang)) {
+        console.warn(`[${jobId}] ⚠️ IndicTrans2 output may be romanized, falling back`);
+      } else if (result.qe_score != null && result.qe_score < MIN_QE_SCORE) {
+        console.warn(`[${jobId}] ⚠️ IndicTrans2 QE score ${result.qe_score.toFixed(3)} (via ${result.qe_method}) is below the ${MIN_QE_SCORE} threshold — trying a higher-priority engine before accepting it`);
+        bestFallbackCandidate = result; // keep as a safety net, don't discard it yet
+      } else {
+        const qeLabel = result.qe_score != null
+          ? `QE=${result.qe_score.toFixed(3)} via ${result.qe_method}`
+          : 'QE unavailable, accepting on script validity alone';
+        console.log(`[${jobId}] ✅ IndicTrans2 translation accepted (${qeLabel})`);
+        return result;
+      }
+    }
+  } catch (indicError) {
+    console.warn(`[${jobId}] IndicTrans2 translation failed: ${indicError.message}`);
+  }
+
+  // ===== PRIORITY 1: OPENAI (HIGHEST QUALITY, ONLY IF CONFIGURED) =====
+// AFTER
+const hasRealOpenAIKey = !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-');
+if (hasRealOpenAIKey) {
+    attemptedEngines.push('openai');
+    try {
+      console.log(`[${jobId}] Attempting OpenAI translation...`);
+      const result = await translateWithOpenAI(text, sourceLang, targetLang, jobId);
+
+      if (result && result.text) {
+        console.log(`[${jobId}] ✅ OpenAI translation successful`);
+        if (!verifyProperScript(result.text, targetLang)) {
+          console.warn(`[${jobId}] ⚠️ Translation may be romanized, not proper script`);
+        }
+        return result;
+      }
+    } catch (openaiError) {
+      console.warn(`[${jobId}] OpenAI translation failed: ${openaiError.message}`);
+    }
+  } else {
+    console.log(`[${jobId}] Skipping OpenAI (OPENAI_API_KEY not configured)`);
+  }
 
   // ===== PRIORITY 2: MYMEMORY API (PRIMARY FREE FALLBACK) =====
+  attemptedEngines.push('mymemory');
   try {
     console.log(`[${jobId}] Attempting MyMemory API translation...`);
     const result = await translateWithMyMemory(text, sourceLang, targetLang, jobId);
@@ -269,20 +334,38 @@ export const translateText = async (text, sourceLang, targetLang, jobId = 'unkno
   }
 
   // ===== PRIORITY 3: GOOGLE TRANSLATE (LAST RESORT) =====
+  // ✅ FIX: Calls the correct function (translateWithGoogleTranslate, not translateWithMyMemory
+  // again) with arguments in the correct order matching its signature
+  // (text, sourceLang, targetLang, jobId).
+  attemptedEngines.push('google-translate');
   try {
     console.log(`[${jobId}] Attempting Google Translate...`);
-    const result = await translateWithMyMemory(jobId, sourceLang, targetLang, text);
+    const result = await translateWithGoogleTranslate(text, sourceLang, targetLang, jobId);
 
     if (result && result.text) {
       console.log(`[${jobId}] ✅ Google Translate successful`);
+      if (!verifyProperScript(result.text, targetLang)) {
+        console.warn(`[${jobId}] ⚠️ Translation may be romanized, not proper script`);
+      }
       return result;
     }
   } catch (googleError) {
     console.warn(`[${jobId}] Google Translate failed: ${googleError.message}`);
   }
 
-  // All services failed
-  throw new Error(`All translation services failed for ${sourceLang} → ${targetLang}`);
+  // ✅ NEW: If every higher-priority engine failed or was unconfigured, don't throw away
+  // the one translation we do have just because its QE score was mediocre — a below-
+  // threshold translation is still far better than no dubbed audio at all. Callers that
+  // care can check `qe_below_threshold` on the returned object (e.g. to flag the job for
+  // manual review) without the pipeline hard-failing over it.
+  if (bestFallbackCandidate) {
+    console.warn(`[${jobId}] ⚠️ All higher-priority engines failed or were unavailable — using the below-threshold IndicTrans2 result instead of failing the job (QE=${bestFallbackCandidate.qe_score.toFixed(3)} via ${bestFallbackCandidate.qe_method}, threshold=${MIN_QE_SCORE})`);
+    return { ...bestFallbackCandidate, qe_below_threshold: true };
+  }
+
+  // All services failed - throw a clear, descriptive error instead of silently
+  // returning something the caller might mistake for a real translation.
+  throw new Error(`All translation services failed for ${sourceLang} → ${targetLang}. Tried: ${attemptedEngines.join(', ')}.`);
 };
 
 function verifyProperScript(text, targetLanguage) {
@@ -299,10 +382,10 @@ function verifyProperScript(text, targetLanguage) {
     'or': /[\u0B00-\u0B7F]/, // Oriya
     'ur': /[\u0600-\u06FF]/  // Arabic script (Urdu)
   };
-  
+
   const scriptPattern = scriptRanges[targetLanguage];
   if (!scriptPattern) return true; // Unknown language, skip check
-  
+
   return scriptPattern.test(text);
 }
 
@@ -428,6 +511,98 @@ const translateWithGoogleFixed = async (transcription, targetLanguage, originalD
 
 
 
+// ===== ✅ NEW: SEGMENT-AWARE TRANSLATION =====
+// Root cause this closes: processController.js used to call
+// `translateText(transcription.text, ...)` — passing only the flattened
+// full-text string — so `transcription.segments` (Whisper's own sentence-
+// level start/end timing, already extracted in PIPELINE STEP 3/7) was
+// silently discarded before translation ever ran. That's why
+// `translation.segments` was always empty for every engine (IndicTrans2 /
+// Google / MyMemory all just returned a flat {text} object back), which in
+// turn meant the entire segment-aware TTS architecture already written in
+// ttsService.js (generateSegmentBasedTTS, resolveVoiceForSegment,
+// buildPerSpeakerRegisterMap, per-segment targetF0Hz) was dead code — every
+// real job took the full-text branch with one flat, job-level pitch/loudness
+// target for the whole clip.
+//
+// This translates each Whisper segment individually (reusing the exact same
+// multi-engine fallback chain as translateText, just called once per
+// segment) and reassembles a real `segments` array with per-segment timing
+// preserved, so the segment-aware pipeline actually activates.
+// AFTER
+export const translateSegments = async (transcription, sourceLang, targetLang, jobId = 'unknown') => {
+  const sourceSegments = transcription.segments || [];
+
+  if (sourceSegments.length === 0) {
+    const fullResult = await translateText(transcription.text, sourceLang, targetLang, jobId);
+    console.log(`[${jobId}] No transcription segments available — returning flat translation (segments stay empty).`);
+    return fullResult;
+  }
+
+  // ✅ IMPROVED: previously this called translateText once for the full text
+  // AND once per segment — each call spawning a fresh Python process that
+  // reloaded the IndicTrans2 model from scratch (~15-19s every time; 5 loads
+  // for a 4-segment job, 60-95s of pure overhead on a real run). Try ALL of
+  // them (full text + every segment) through ONE batched IndicTrans2 call
+  // first; only items that fail validation there fall back to the full
+  // multi-engine chain (translateText), exactly as before.
+  const segmentTexts = sourceSegments.map(s => (s.text || '').trim());
+  const allTexts = [transcription.text, ...segmentTexts];
+
+  console.log(`[${jobId}] Attempting batched IndicTrans2 translation for full text + ${sourceSegments.length} segment(s)...`);
+
+  let batchResults = null;
+  try {
+    batchResults = await translateMultipleWithIndicTrans2(allTexts, sourceLang, targetLang, jobId);
+  } catch (batchError) {
+    console.warn(`[${jobId}] Batched IndicTrans2 translation failed entirely (${batchError.message}) — falling back to per-item translation.`);
+  }
+
+  const MIN_QE_SCORE = parseFloat(process.env.INDICTRANS2_MIN_QE_SCORE || '0.5');
+  const resolveItem = async (text, label, index) => {
+    const batchItem = batchResults ? batchResults[index] : null;
+    const scriptOk = batchItem && verifyProperScript(batchItem.text, targetLang);
+    const qeOk = batchItem && (batchItem.qe_score == null || batchItem.qe_score >= MIN_QE_SCORE);
+    if (batchItem && scriptOk && qeOk) return batchItem;
+
+    console.log(`[${jobId}] ${label} needs the full fallback chain (batch result ${batchItem ? 'below quality threshold' : 'unavailable'})`);
+    return translateText(text, sourceLang, targetLang, `${jobId}_${label}`);
+  };
+
+  const fullResult = await resolveItem(transcription.text, 'fulltext', 0);
+
+  console.log(`[${jobId}] Resolving ${sourceSegments.length} segment(s)...`);
+  const translatedSegments = [];
+  for (let i = 0; i < sourceSegments.length; i++) {
+    const segment = sourceSegments[i];
+    const segmentText = segmentTexts[i];
+
+    if (!segmentText) {
+      translatedSegments.push({ ...segment, text: '', originaltext: segment.text || '' });
+      continue;
+    }
+
+    try {
+      const segResult = await resolveItem(segmentText, `seg${i}`, i + 1);
+      translatedSegments.push({
+        ...segment,
+        text: segResult.text,
+        originaltext: segment.text,
+        engine: segResult.engine || fullResult.engine,
+      });
+    } catch (segError) {
+      console.warn(`[${jobId}] Segment ${i + 1}/${sourceSegments.length} translation failed, keeping original text: ${segError.message}`);
+      translatedSegments.push({ ...segment, text: segment.text, originaltext: segment.text, translationerror: true });
+    }
+  }
+
+  console.log(`[${jobId}] ✅ Built ${translatedSegments.length} translated segment(s) with preserved timing.`);
+
+  return {
+    ...fullResult,
+    segments: translatedSegments,
+  };
+};
 // ===== SKIPPED TRANSLATION (SAME LANGUAGE) =====
 const createSkippedTranslation = async (transcription, sourceLanguage, targetLanguage, jobId) => {
   console.log(`[${jobId}] Creating skipped translation (same language: ${targetLanguage})`);
@@ -617,6 +792,7 @@ export const isLanguagePairSupported = (sourceLang, targetLang) => {
 // ===== EXPORT ALL FUNCTIONS =====
 export default {
   translateText,
+  translateSegments,
   getSupportedIndianLanguages,
   getMostCommonIndianLanguages,
   getBestTranslationPairs,
